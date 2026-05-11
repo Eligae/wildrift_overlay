@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.eligae.wrspellcheck"
+    namespace = "com.eligae.wildrift.overlay"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.eligae.wrspellcheck"
+        applicationId = "com.eligae.wildrift.overlay"
         minSdk = 26
         targetSdk = 35
         versionCode = 1

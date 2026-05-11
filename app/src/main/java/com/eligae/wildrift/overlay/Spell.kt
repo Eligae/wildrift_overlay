@@ -1,4 +1,4 @@
-package com.eligae.wrspellcheck
+package com.eligae.wildrift.overlay
 
 enum class Spell(val label: String, val defaultCooldownSec: Int) {
     FLASH("F", 150),

@@ -1,4 +1,4 @@
-package com.eligae.wrspellcheck
+package com.eligae.wildrift.overlay
 
 data class SlotState(
     val index: Int,

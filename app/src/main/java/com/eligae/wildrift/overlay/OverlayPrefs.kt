@@ -1,4 +1,4 @@
-package com.eligae.wrspellcheck
+package com.eligae.wildrift.overlay
 
 import android.content.Context
 
