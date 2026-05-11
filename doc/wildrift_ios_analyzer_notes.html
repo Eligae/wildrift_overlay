@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wild Rift 분석 앱 · iOS 설계 노트</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,700;9..144,900&family=Noto+Serif+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c1117;
+    --bg-elev: #131a23;
+    --ink: #e8e3d6;
+    --ink-soft: #a8a194;
+    --ink-dim: #6b6557;
+    --gold: #c89b3c;
+    --gold-soft: #f0e6d2;
+    --hex: #0ac8b9;
+    --hex-deep: #005a82;
+    --rule: #2a3340;
+    --warn: #c8553d;
+    --serif: 'Fraunces', 'Noto Serif KR', serif;
+    --korean: 'Noto Serif KR', serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--korean);
+    font-weight: 400;
+    line-height: 1.75;
+    font-size: 16px;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse at top, rgba(10, 200, 185, 0.06), transparent 60%),
+      radial-gradient(ellipse at bottom right, rgba(200, 155, 60, 0.04), transparent 50%);
+    background-attachment: fixed;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  main {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 80px 32px 120px;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* HEADER */
+  header {
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 48px;
+    margin-bottom: 56px;
+  }
+
+  .meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 32px;
+  }
+
+  .meta span:nth-child(2) { color: var(--hex); }
+
+  h1 {
+    font-family: var(--serif);
+    font-weight: 900;
+    font-size: clamp(40px, 7vw, 68px);
+    line-height: 0.98;
+    letter-spacing: -0.025em;
+    margin-bottom: 24px;
+    color: var(--gold-soft);
+  }
+
+  h1 .accent {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--gold);
+  }
+
+  .subtitle {
+    font-family: var(--korean);
+    font-size: 18px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    max-width: 560px;
+  }
+
+  /* TABLE OF CONTENTS */
+  .toc {
+    margin-top: 40px;
+    padding: 20px 24px;
+    background: var(--bg-elev);
+    border-left: 2px solid var(--gold);
+  }
+
+  .toc-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .toc ol {
+    list-style: none;
+    counter-reset: toc;
+  }
+
+  .toc li {
+    counter-increment: toc;
+    font-size: 14px;
+    padding: 4px 0;
+  }
+
+  .toc li::before {
+    content: counter(toc, decimal-leading-zero);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-dim);
+    margin-right: 12px;
+  }
+
+  .toc a {
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px dotted transparent;
+    transition: all 0.2s;
+  }
+
+  .toc a:hover {
+    color: var(--hex);
+    border-bottom-color: var(--hex);
+  }
+
+  /* SECTIONS */
+  section {
+    margin-bottom: 72px;
+    scroll-margin-top: 40px;
+  }
+
+  .section-number {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    color: var(--gold);
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  h2 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: clamp(28px, 4vw, 38px);
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+    margin-bottom: 28px;
+    color: var(--gold-soft);
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 16px;
+  }
+
+  h3 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 20px;
+    margin: 32px 0 14px;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+
+  h3 .num {
+    font-family: var(--mono);
+    font-weight: 400;
+    font-size: 13px;
+    color: var(--hex);
+    margin-right: 10px;
+    letter-spacing: 0.05em;
+  }
+
+  p { margin-bottom: 18px; }
+
+  p + p { margin-top: -4px; }
+
+  strong {
+    color: var(--gold-soft);
+    font-weight: 700;
+  }
+
+  em {
+    color: var(--hex);
+    font-style: italic;
+  }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.85em;
+    background: rgba(10, 200, 185, 0.08);
+    color: var(--hex);
+    padding: 2px 6px;
+    border-radius: 2px;
+    border: 1px solid rgba(10, 200, 185, 0.15);
+  }
+
+  ul {
+    list-style: none;
+    margin-bottom: 20px;
+  }
+
+  ul li {
+    position: relative;
+    padding-left: 22px;
+    margin-bottom: 10px;
+  }
+
+  ul li::before {
+    content: '◆';
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: var(--gold);
+    font-size: 10px;
+    transform: translateY(8px);
+  }
+
+  /* CALLOUTS */
+  .callout {
+    margin: 28px 0;
+    padding: 20px 24px;
+    background: var(--bg-elev);
+    border-left: 3px solid var(--hex);
+    position: relative;
+  }
+
+  .callout.warn { border-left-color: var(--warn); }
+  .callout.warn .callout-label { color: var(--warn); }
+
+  .callout-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--hex);
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* PIPELINE / STEPS */
+  .pipeline {
+    margin: 24px 0;
+    counter-reset: step;
+  }
+
+  .step {
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    gap: 20px;
+    padding: 18px 0;
+    border-bottom: 1px dashed var(--rule);
+    counter-increment: step;
+  }
+
+  .step:last-child { border-bottom: none; }
+
+  .step-num {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 300;
+    font-size: 44px;
+    color: var(--gold);
+    line-height: 1;
+  }
+
+  .step-body h4 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 17px;
+    margin-bottom: 6px;
+    color: var(--gold-soft);
+  }
+
+  .step-body p {
+    font-size: 15px;
+    margin: 0;
+    color: var(--ink-soft);
+  }
+
+  /* TABLE-LIKE */
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 24px 0;
+  }
+
+  .compare-cell {
+    padding: 18px;
+    background: var(--bg-elev);
+    border-top: 2px solid var(--rule);
+  }
+
+  .compare-cell.good { border-top-color: var(--hex); }
+  .compare-cell.bad { border-top-color: var(--warn); }
+
+  .compare-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .good .compare-label { color: var(--hex); }
+  .bad .compare-label { color: var(--warn); }
+
+  .compare-cell p { font-size: 14px; margin: 0; color: var(--ink-soft); }
+
+  /* PULL QUOTE */
+  .pullquote {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 300;
+    font-size: clamp(22px, 3.5vw, 30px);
+    line-height: 1.35;
+    color: var(--gold-soft);
+    margin: 48px 0;
+    padding: 0 24px;
+    border-left: 2px solid var(--gold);
+    letter-spacing: -0.01em;
+  }
+
+  /* FOOTER */
+  footer {
+    margin-top: 80px;
+    padding-top: 32px;
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  footer .signet {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 300;
+    font-size: 16px;
+    color: var(--gold);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  @media (max-width: 600px) {
+    main { padding: 48px 20px 80px; }
+    .compare { grid-template-columns: 1fr; }
+    .step { grid-template-columns: 44px 1fr; gap: 14px; }
+    .step-num { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <div class="meta">
+    <span>Project Notes · 001</span>
+    <span>iOS / Wild Rift</span>
+    <span>2026.05.11</span>
+  </div>
+  <h1>iOS에서<br>게임 분석 앱을<br><span class="accent">만든다는 것</span></h1>
+  <p class="subtitle">와일드리프트 로딩 화면에서 상대 챔피언·스펠을 인식하고, 가능한 범위에서 궁 쿨타임 정보를 보여주는 도우미 앱 설계 노트.</p>
+
+  <nav class="toc">
+    <div class="toc-label">목차</div>
+    <ol>
+      <li><a href="#s1">iOS의 오버레이 제약</a></li>
+      <li><a href="#s2">현실 점검 — 무엇이 가능한가</a></li>
+      <li><a href="#s3">단계별 접근</a></li>
+      <li><a href="#s4">화면 인식 파이프라인</a></li>
+      <li><a href="#s5">시작하기</a></li>
+    </ol>
+  </nav>
+</header>
+
+<!-- SECTION 1 -->
+<section id="s1">
+  <span class="section-number">§ 01</span>
+  <h2>iOS의 오버레이 제약</h2>
+  <p>iOS는 Android와 달리 <strong>시스템 전역 오버레이를 허용하지 않는다</strong>. Android의 <code>SYSTEM_ALERT_WINDOW</code>에 대응하는 권한이 없고, Facebook Messenger 채팅 헤드 같은 플로팅 위젯은 App Store 심사에서 거부된다. 샌드박스 보안 모델 때문이다.</p>
+
+  <p>대신 iOS에는 "오버레이스러운" 효과를 낼 수 있는 공식 API들이 있다.</p>
+
+  <ul>
+    <li><strong>Picture in Picture</strong> — <code>AVSampleBufferDisplayLayer</code>로 임의 콘텐츠를 PiP 창에 그릴 수 있지만, 백그라운드 진입 시점 제약과 오디오 세션 필수 등 까다로움</li>
+    <li><strong>Live Activities &amp; Dynamic Island</strong> (iOS 16.1+) — 잠금화면·다이내믹 아일랜드에 정보 표시. 가장 "오버레이에 가까운" 공식 수단</li>
+    <li><strong>Widgets</strong> (WidgetKit) — 홈/잠금화면 위젯. iOS 17부터 AppIntent로 인터랙션 가능</li>
+    <li><strong>앱 내부 오버레이</strong> — 자기 앱 안에서는 자유</li>
+    <li><strong>Broadcast Upload Extension</strong> — 화면 공유 중에 한해 시스템 전반에 작은 UI 표시 가능</li>
+  </ul>
+
+  <div class="callout warn">
+    <span class="callout-label">핵심 제약</span>
+    <p>iOS 앱은 <strong>절대로 다른 앱(게임)의 화면 픽셀을 직접 읽을 수 없다</strong>. 안드로이드식 "게임 위에 떠 있는 도우미" 구조는 처음부터 불가능. 우회 경로로 가야 한다.</p>
+  </div>
+</section>
+
+<!-- SECTION 2 -->
+<section id="s2">
+  <span class="section-number">§ 02</span>
+  <h2>현실 점검 — 무엇이 가능한가</h2>
+
+  <p>라이엇은 <strong>Wild Rift 공식 API를 제공하지 않는다</strong> (PC LoL은 있지만 모바일은 없음). "소환사명으로 매치 정보 조회" 같은 깔끔한 길은 막혀 있고, <em>화면 인식 + 정적 데이터 매칭</em>으로 가야 한다.</p>
+
+  <h3>로딩 화면에서 알 수 있는 것</h3>
+  <div class="compare">
+    <div class="compare-cell good">
+      <div class="compare-label">✓ 가능</div>
+      <p>챔피언 5명 · 소환사 스펠 2개씩 · 소환사명/랭크 · 챔피언별 <em>기본</em> 궁 쿨타임 (레벨 1/6/11/16)</p>
+    </div>
+    <div class="compare-cell bad">
+      <div class="compare-label">✗ 불가</div>
+      <p>실시간 궁 쿨타임 — 아이템(아이오니아 장화, 군주의 명령), 룬(감응의 돌), 어빌리티 헤이스트로 결정되므로 <strong>인게임에서만</strong> 추적 가능</p>
+    </div>
+  </div>
+
+  <p class="pullquote">로딩 화면에서 줄 수 있는 가장 큰 가치는 "라인전 플랜". 챔피언/스펠 조합만 알아도 절반은 짜진다.</p>
+</section>
+
+<!-- SECTION 3 -->
+<section id="s3">
+  <span class="section-number">§ 03</span>
+  <h2>단계별 접근</h2>
+
+  <h3><span class="num">MVP</span>1단계 · 로딩 화면 스크린샷 분석</h3>
+  <p>사용자가 로딩 화면에서 스크린샷 한 번 → 공유 시트로 앱에 전달 → 분석. 가장 빠른 검증 경로이자 사용자에게 줄 수 있는 가장 큰 가치.</p>
+
+  <div class="pipeline">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>좌/우 팀 분할</h4>
+        <p>로딩 화면 레이아웃은 고정 — 상대 좌표 기반으로 챔피언 슬롯 5개 크롭</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>챔피언 식별</h4>
+        <p>각 슬롯 ROI → <code>VNFeaturePrintObservation</code> + 챔피언 아이콘 DB와 코사인 유사도 매칭</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>스펠 인식</h4>
+        <p>챔피언 옆 스펠 아이콘 2개 크롭 → 10여 종 스펠 DB와 매칭 (매우 쉬움)</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h4>분석 출력</h4>
+        <p>"다리우스(점멸/점화), 야스오(점멸/유체화)..." + 궁 기본 쿨타임 · 카운터 · 파워 스파이크 레벨</p>
+      </div>
+    </div>
+  </div>
+
+  <h3><span class="num">EXT</span>2단계 · 인게임 추적 (욕심 단계)</h3>
+  <p>ReplayKit Broadcast Extension으로 게임 중 화면을 받아 상대 궁 사용 감지 → Dynamic Island에 카운트다운. 가장 현실적인 건 <strong>수동 트리거 하이브리드</strong> — 사용자가 상대 궁 본 순간 Dynamic Island 탭으로 타이머 시작. UX는 덜 매끈하지만 인식 오류가 없다.</p>
+
+  <div class="callout warn">
+    <span class="callout-label">주의</span>
+    <p>Broadcast Extension은 메모리 한도 ~50MB. 발열·배터리 부담도 있고, 무엇보다 <strong>Riot의 서드파티 정책</strong> 문제가 있다. 챔피언 식별만 자동화하고 쿨타임은 수동 트래커로 두는 게 안전.</p>
+  </div>
+</section>
+
+<!-- SECTION 4 -->
+<section id="s4">
+  <span class="section-number">§ 04</span>
+  <h2>화면 인식 파이프라인</h2>
+
+  <h3>챔피언 아이콘 DB</h3>
+  <p>와일드리프트 챔피언 100명+. 공식 위키에서 아이콘 이미지를 받아 정사각형 정규화 → 각 이미지의 <code>VNFeaturePrintObservation</code> 벡터를 미리 계산해 앱에 번들. 런타임엔 크롭 ROI의 feature print만 뽑아 nearest neighbor 검색. <strong>100개 비교가 1ms 이내</strong>. CoreML 학습 없이도 정확도 양호하고, 새 챔피언은 이미지 한 장으로 추가 가능.</p>
+
+  <p>스킨이 변수다. 로딩 화면은 선택 스킨의 스플래시 일부가 들어가서 기본 아이콘과 다를 수 있음 → 주요 스킨 아이콘도 DB에 함께 넣고 "어떤 스킨이든 챔피언 X로 매핑".</p>
+
+  <h3>ROI 좌표</h3>
+  <p>iPhone 해상도/노치 종류마다 픽셀 좌표가 다르므로 <strong>상대 좌표</strong>(이미지 너비/높이 비율)로 저장. 와일드리프트는 가로 고정이라 회전 처리 불필요. 노치/다이내믹 아일랜드 기종은 좌측 첫 챔피언 박스 중심만 한 번 캘리브레이션하면 나머지는 등간격으로 계산.</p>
+</section>
+
+<!-- SECTION 5 -->
+<section id="s5">
+  <span class="section-number">§ 05</span>
+  <h2>시작하기</h2>
+
+  <p>가장 빠른 검증 경로:</p>
+
+  <div class="pipeline">
+    <div class="step">
+      <div class="step-num">i</div>
+      <div class="step-body">
+        <h4>로딩 화면 샘플 수집</h4>
+        <p>다양한 기종·스킨으로 스크린샷 5~10장</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">ii</div>
+      <div class="step-body">
+        <h4>ROI 좌표 잡기</h4>
+        <p>Python + Pillow로 챔피언 슬롯 잘라보며 안정성 눈으로 확인</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">iii</div>
+      <div class="step-body">
+        <h4>iOS PoC</h4>
+        <p><code>PHPickerViewController</code>로 사진 받기 → <code>VNFeaturePrintObservation</code>으로 매칭</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">iv</div>
+      <div class="step-body">
+        <h4>정보 DB 연결</h4>
+        <p>챔피언별 궁 쿨타임·카운터·팁 데이터 붙여 결과 화면 제작</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">v</div>
+      <div class="step-body">
+        <h4>공유 익스텐션</h4>
+        <p>스크린샷 찍자마자 바로 분석되게 Share Extension 추가</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <span class="callout-label">권장</span>
+    <p>처음부터 Broadcast Extension은 지양 — 50MB 메모리 제한, lldb 디버깅 번거로움 때문에 핵심 가치인 <strong>인식 품질</strong>에 집중하기 어렵다. 수동 스크린샷 임포트로 파이프라인 검증부터.</p>
+  </div>
+</section>
+
+<footer>
+  <span>— end of notes</span>
+  <span class="signet">Hextech &amp; Vision</span>
+  <span>v.001</span>
+</footer>
+
+</main>
+</body>
+</html>
