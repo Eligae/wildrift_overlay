@@ -18,6 +18,7 @@ class OverlayView(
     private val onDragEnd: () -> Unit,
 ) : LinearLayout(context) {
 
+    private val handleView: TextView
     private val slotsContainer: LinearLayout
 
     init {
@@ -26,8 +27,8 @@ class OverlayView(
         val dp = { v: Int -> (v * resources.displayMetrics.density).toInt() }
         setPadding(dp(3), dp(3), dp(3), dp(3))
 
-        val handleView = TextView(context).apply {
-            text = "≡"
+        handleView = TextView(context).apply {
+            text = if (prefs.collapsed) "+" else "−"
             setTextColor(Color.WHITE)
             textSize = 14f
             gravity = Gravity.CENTER
@@ -55,6 +56,7 @@ class OverlayView(
                 val collapsed = !prefs.collapsed
                 prefs.collapsed = collapsed
                 slotsContainer.visibility = if (collapsed) View.GONE else View.VISIBLE
+                handle.text = if (collapsed) "+" else "−"
                 return true
             }
         })

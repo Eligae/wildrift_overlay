@@ -35,7 +35,7 @@ class SlotView(
         }
 
         addView(TextView(context).apply {
-            text = "P$slotIndex"
+            text = LANE_LABELS.getOrElse(slotIndex - 1) { "?" }
             setTextColor(Color.WHITE)
             textSize = 9f
             gravity = Gravity.CENTER
@@ -137,6 +137,7 @@ class SlotView(
     private enum class SlotButton { SPELL_1, SPELL_2 }
 
     companion object {
+        private val LANE_LABELS = arrayOf("탑", "정", "미", "원", "서")
         private val COLOR_IDLE = Color.parseColor("#444444")
         private val COLOR_COUNTDOWN = Color.parseColor("#3355AA")
         private val COLOR_IMMINENT_A = Color.parseColor("#AA3300")
