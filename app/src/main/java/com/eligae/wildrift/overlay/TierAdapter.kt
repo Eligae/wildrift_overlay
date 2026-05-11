@@ -3,8 +3,11 @@ package com.eligae.wildrift.overlay
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewOutlineProvider
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
 import com.eligae.wildrift.overlay.api.NormalizedHero
 
 class TierAdapter(
@@ -13,8 +16,15 @@ class TierAdapter(
 
     class VH(view: View) : RecyclerView.ViewHolder(view) {
         val rank: TextView = view.findViewById(R.id.rank)
+        val avatar: ImageView = view.findViewById(R.id.avatar)
         val name: TextView = view.findViewById(R.id.name)
-        val rates: TextView = view.findViewById(R.id.rates)
+        val subRates: TextView = view.findViewById(R.id.sub_rates)
+        val winRate: TextView = view.findViewById(R.id.win_rate)
+
+        init {
+            avatar.clipToOutline = true
+            avatar.outlineProvider = ViewOutlineProvider.BACKGROUND
+        }
     }
 
     fun submit(list: List<NormalizedHero>) {
@@ -32,8 +42,22 @@ class TierAdapter(
         val hero = items[position]
         holder.rank.text = (position + 1).toString()
         holder.name.text = hero.displayName
-        holder.rates.text =
-            "W ${(hero.winRate * 100).fmt1()}%  P ${(hero.pickRate * 100).fmt1()}%  B ${(hero.banRate * 100).fmt1()}%"
+        holder.winRate.text = "${(hero.winRate * 100).fmt1()}%"
+        holder.subRates.text =
+            "P ${(hero.pickRate * 100).fmt1()}%  ·  B ${(hero.banRate * 100).fmt1()}%"
+
+        if (hero.avatar.isNotBlank()) {
+            holder.avatar.load(hero.avatar) {
+                crossfade(true)
+            }
+        } else {
+            holder.avatar.setImageDrawable(null)
+        }
+
+        val highlight = position < 3
+        holder.itemView.setBackgroundResource(
+            if (highlight) R.drawable.bg_tier_row_top else R.drawable.bg_tier_row
+        )
     }
 
     override fun getItemCount(): Int = items.size

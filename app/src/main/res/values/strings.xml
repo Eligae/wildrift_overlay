@@ -19,4 +19,5 @@
     <string name="tier_updated">갱신: %1$s</string>
     <string name="tier_error">오류: %1$s</string>
     <string name="open_tier">티어 보기</string>
+    <string name="win_label">WIN</string>
 </resources>
