@@ -20,6 +20,7 @@ class SlotView(
     private val spell1Button: TextView
     private val spell2Button: TextView
     private val handler = Handler(Looper.getMainLooper())
+    private val scale = prefs.scale
 
     private val tick = object : Runnable {
         override fun run() {
@@ -31,7 +32,6 @@ class SlotView(
 
     init {
         orientation = HORIZONTAL
-        val dp = { v: Int -> (v * resources.displayMetrics.density).toInt() }
         layoutParams = LayoutParams(LayoutParams.WRAP_CONTENT, dp(26)).apply {
             topMargin = dp(1)
         }
@@ -39,7 +39,7 @@ class SlotView(
         laneLabel = TextView(context).apply {
             text = LANE_LABELS.getOrElse(slotIndex - 1) { "?" }
             setTextColor(Color.WHITE)
-            textSize = 9f
+            textSize = 9f * scale
             gravity = Gravity.CENTER
             layoutParams = LayoutParams(dp(22), LayoutParams.MATCH_PARENT)
         }
@@ -65,6 +65,8 @@ class SlotView(
     fun setLaneLabelVisible(visible: Boolean) {
         laneLabel.visibility = if (visible) View.VISIBLE else View.GONE
     }
+
+    private fun dp(v: Int): Int = (v * scale * resources.displayMetrics.density).toInt()
 
     private fun toggle(which: SlotButton) {
         val now = System.currentTimeMillis()
@@ -127,10 +129,9 @@ class SlotView(
     }
 
     private fun button(): TextView {
-        val dp = { v: Int -> (v * resources.displayMetrics.density).toInt() }
         return TextView(context).apply {
             setTextColor(Color.WHITE)
-            textSize = 11f
+            textSize = 11f * scale
             gravity = Gravity.CENTER
             isClickable = true
             isLongClickable = true

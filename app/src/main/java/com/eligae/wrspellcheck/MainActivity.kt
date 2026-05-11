@@ -5,25 +5,51 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Button
+import android.widget.SeekBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var prefs: OverlayPrefs
     private lateinit var permissionStatus: TextView
     private lateinit var btnGrant: Button
     private lateinit var btnStart: Button
+    private lateinit var seekScale: SeekBar
+    private lateinit var scaleValue: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        prefs = OverlayPrefs(this)
         permissionStatus = findViewById(R.id.permission_status)
         btnGrant = findViewById(R.id.btn_grant)
         btnStart = findViewById(R.id.btn_start)
+        seekScale = findViewById(R.id.seek_scale)
+        scaleValue = findViewById(R.id.scale_value)
 
         btnGrant.setOnClickListener { requestOverlayPermission() }
         btnStart.setOnClickListener { toggleOverlay() }
+
+        seekScale.progress = ((prefs.scale - SCALE_MIN) / SCALE_STEP).toInt()
+        scaleValue.text = formatScale(prefs.scale)
+        seekScale.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
+                scaleValue.text = formatScale(progressToScale(progress))
+            }
+            override fun onStartTrackingTouch(sb: SeekBar?) {}
+            override fun onStopTrackingTouch(sb: SeekBar?) {
+                val newScale = progressToScale(sb?.progress ?: 5)
+                if (newScale != prefs.scale) {
+                    prefs.scale = newScale
+                    if (OverlayService.isRunning) {
+                        OverlayService.stop(this@MainActivity)
+                        sb?.postDelayed({ OverlayService.start(this@MainActivity) }, 300)
+                    }
+                }
+            }
+        })
     }
 
     override fun onResume() {
@@ -66,5 +92,14 @@ class MainActivity : AppCompatActivity() {
             Uri.parse("package:$packageName")
         )
         startActivity(intent)
+    }
+
+    private fun progressToScale(progress: Int): Float = SCALE_MIN + progress * SCALE_STEP
+
+    private fun formatScale(scale: Float): String = "%.1fx".format(scale)
+
+    companion object {
+        private const val SCALE_MIN = 0.5f
+        private const val SCALE_STEP = 0.1f
     }
 }

@@ -10,4 +10,5 @@
     <string name="notification_channel_desc">오버레이가 떠 있는 동안 표시되는 알림입니다.</string>
     <string name="notification_title">오버레이 활성</string>
     <string name="notification_text">와일드리프트 스펠체크가 실행 중입니다.</string>
+    <string name="scale_label">오버레이 크기</string>
 </resources>

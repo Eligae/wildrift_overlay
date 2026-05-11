@@ -22,16 +22,16 @@ class OverlayView(
     private val handleView: TextView
     private val slotsContainer: LinearLayout
     private val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
+    private val scale = prefs.scale
 
     init {
         orientation = HORIZONTAL
         setBackgroundColor(Color.parseColor("#CC000000"))
-        val dp = { v: Int -> (v * resources.displayMetrics.density).toInt() }
         setPadding(dp(3), dp(3), dp(3), dp(3))
 
         handleView = TextView(context).apply {
             setTextColor(Color.WHITE)
-            textSize = 14f
+            textSize = 14f * scale
             gravity = Gravity.CENTER
             layoutParams = LayoutParams(dp(22), LayoutParams.MATCH_PARENT)
         }
@@ -49,6 +49,8 @@ class OverlayView(
         applyLevel()
         attachHandleGestures(handleView)
     }
+
+    private fun dp(v: Int): Int = (v * scale * resources.displayMetrics.density).toInt()
 
     @SuppressLint("ClickableViewAccessibility")
     private fun attachHandleGestures(handle: TextView) {
