@@ -3,12 +3,13 @@ package com.eligae.wrspellcheck
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
-import android.view.GestureDetector
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
 import android.widget.LinearLayout
 import android.widget.TextView
+import kotlin.math.abs
 
 class OverlayView(
     context: Context,
@@ -20,6 +21,7 @@ class OverlayView(
 
     private val handleView: TextView
     private val slotsContainer: LinearLayout
+    private val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
 
     init {
         orientation = HORIZONTAL
@@ -51,39 +53,49 @@ class OverlayView(
 
     @SuppressLint("ClickableViewAccessibility")
     private fun attachHandleGestures(handle: TextView) {
-        val gestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
-            override fun onDoubleTap(e: MotionEvent): Boolean {
-                val collapsed = !prefs.collapsed
-                prefs.collapsed = collapsed
-                slotsContainer.visibility = if (collapsed) View.GONE else View.VISIBLE
-                handle.text = if (collapsed) "+" else "−"
-                return true
-            }
-        })
-
         var downX = 0f
         var downY = 0f
+        var moved = false
+
         handle.setOnTouchListener { _, event ->
-            gestureDetector.onTouchEvent(event)
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
                     downX = event.rawX
                     downY = event.rawY
+                    moved = false
                     onDragStart()
                     true
                 }
                 MotionEvent.ACTION_MOVE -> {
                     val dx = (event.rawX - downX).toInt()
                     val dy = (event.rawY - downY).toInt()
-                    onDrag(dx, dy)
+                    if (!moved && (abs(dx) > touchSlop || abs(dy) > touchSlop)) {
+                        moved = true
+                    }
+                    if (moved) onDrag(dx, dy)
                     true
                 }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    onDragEnd()
+                MotionEvent.ACTION_UP -> {
+                    if (moved) {
+                        onDragEnd()
+                    } else {
+                        toggleCollapsed()
+                    }
+                    true
+                }
+                MotionEvent.ACTION_CANCEL -> {
+                    if (moved) onDragEnd()
                     true
                 }
                 else -> false
             }
         }
+    }
+
+    private fun toggleCollapsed() {
+        val collapsed = !prefs.collapsed
+        prefs.collapsed = collapsed
+        slotsContainer.visibility = if (collapsed) View.GONE else View.VISIBLE
+        handleView.text = if (collapsed) "+" else "−"
     }
 }
