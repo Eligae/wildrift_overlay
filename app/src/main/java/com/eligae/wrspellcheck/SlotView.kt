@@ -8,9 +8,13 @@ import android.view.Gravity
 import android.widget.LinearLayout
 import android.widget.TextView
 
-class SlotView(context: Context, slotIndex: Int) : LinearLayout(context) {
+class SlotView(
+    context: Context,
+    slotIndex: Int,
+    private val prefs: OverlayPrefs,
+) : LinearLayout(context) {
 
-    private var state = SlotState(slotIndex)
+    private var state = prefs.loadSlot(slotIndex)
     private val spell1Button: TextView
     private val spell2Button: TextView
     private val ultButton: TextView
@@ -75,6 +79,7 @@ class SlotView(context: Context, slotIndex: Int) : LinearLayout(context) {
                     now + state.ultimateCooldownSec * 1000L else null
             )
         }
+        prefs.saveSlot(state)
         render()
     }
 
@@ -84,6 +89,7 @@ class SlotView(context: Context, slotIndex: Int) : LinearLayout(context) {
             SlotButton.SPELL_2 -> state.copy(spell2 = state.spell2.next())
             else -> return
         }
+        prefs.saveSlot(state)
         render()
     }
 
@@ -92,6 +98,7 @@ class SlotView(context: Context, slotIndex: Int) : LinearLayout(context) {
         val idx = Spell.ULTIMATE_PRESETS.indexOf(current).coerceAtLeast(0)
         val next = Spell.ULTIMATE_PRESETS[(idx + 1) % Spell.ULTIMATE_PRESETS.size]
         state = state.copy(ultimateCooldownSec = next)
+        prefs.saveSlot(state)
         render()
     }
 

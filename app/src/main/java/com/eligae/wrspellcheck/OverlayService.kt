@@ -17,12 +17,17 @@ import androidx.core.app.NotificationCompat
 class OverlayService : Service() {
 
     private lateinit var windowManager: WindowManager
+    private lateinit var prefs: OverlayPrefs
     private var overlayView: View? = null
+    private lateinit var overlayParams: WindowManager.LayoutParams
+    private var dragStartX = 0
+    private var dragStartY = 0
 
     override fun onCreate() {
         super.onCreate()
         isRunning = true
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        prefs = OverlayPrefs(this)
         createNotificationChannel()
     }
 
@@ -42,10 +47,26 @@ class OverlayService : Service() {
 
     private fun showOverlay() {
         if (overlayView != null) return
-        val view = OverlayView(this)
+        val view = OverlayView(
+            this,
+            prefs,
+            onDragStart = {
+                dragStartX = overlayParams.x
+                dragStartY = overlayParams.y
+            },
+            onDrag = { dx, dy ->
+                overlayParams.x = dragStartX + dx
+                overlayParams.y = dragStartY + dy
+                overlayView?.let { windowManager.updateViewLayout(it, overlayParams) }
+            },
+            onDragEnd = {
+                prefs.overlayX = overlayParams.x
+                prefs.overlayY = overlayParams.y
+            },
+        )
         val flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
             WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
-        val params = WindowManager.LayoutParams(
+        overlayParams = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
@@ -53,10 +74,10 @@ class OverlayService : Service() {
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
-            x = 32
-            y = 200
+            x = prefs.overlayX
+            y = prefs.overlayY
         }
-        windowManager.addView(view, params)
+        windowManager.addView(view, overlayParams)
         overlayView = view
     }
 
