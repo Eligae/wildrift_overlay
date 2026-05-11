@@ -1,12 +1,16 @@
 package com.eligae.wrspellcheck
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Button
 import android.widget.SeekBar
 import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
@@ -17,6 +21,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnStart: Button
     private lateinit var seekScale: SeekBar
     private lateinit var scaleValue: TextView
+
+    private val notifPermLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* ignore result — 알림은 보조 UX */ }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,6 +58,8 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
+
+        requestNotificationPermissionIfNeeded()
     }
 
     override fun onResume() {
@@ -92,6 +102,13 @@ class MainActivity : AppCompatActivity() {
             Uri.parse("package:$packageName")
         )
         startActivity(intent)
+    }
+
+    private fun requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        val granted = checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) ==
+            PackageManager.PERMISSION_GRANTED
+        if (!granted) notifPermLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
     }
 
     private fun progressToScale(progress: Int): Float = SCALE_MIN + progress * SCALE_STEP
