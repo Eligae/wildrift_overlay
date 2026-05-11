@@ -9,6 +9,9 @@
         <item name="android:textColor">@color/lol_ink</item>
         <item name="android:textColorHint">@color/lol_ink_dim</item>
         <item name="materialButtonStyle">@style/LolButton</item>
+        <item name="android:statusBarColor">@color/lol_bg_elev</item>
+        <item name="android:navigationBarColor">@color/lol_bg</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 
     <style name="LolButton" parent="Widget.MaterialComponents.Button.OutlinedButton">

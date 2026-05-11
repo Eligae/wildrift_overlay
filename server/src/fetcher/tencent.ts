@@ -43,13 +43,13 @@ export interface TierTable {
 
 export type LaneKey = "TOP" | "JUG" | "MID" | "ADC" | "SUP";
 
-// 추정 매핑 — 챔피언 면면 대조로 추후 검증.
+// 실측 검증된 매핑 (텐센트 hero_rank_list_v2).
 const POSITION_TO_LANE: Record<string, LaneKey> = {
-  "1": "TOP",
-  "2": "JUG",
-  "3": "MID",
-  "4": "ADC",
-  "5": "SUP",
+  "1": "MID",
+  "2": "TOP",
+  "3": "ADC",
+  "4": "SUP",
+  "5": "JUG",
 };
 
 export const LANE_ORDER: LaneKey[] = ["TOP", "JUG", "MID", "ADC", "SUP"];
