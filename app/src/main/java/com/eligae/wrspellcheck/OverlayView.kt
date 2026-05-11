@@ -3,28 +3,37 @@ package com.eligae.wrspellcheck
 import android.content.Context
 import android.graphics.Color
 import android.view.Gravity
-import android.widget.FrameLayout
+import android.widget.LinearLayout
 import android.widget.TextView
 
-class OverlayView(context: Context) : FrameLayout(context) {
+class OverlayView(context: Context) : LinearLayout(context) {
 
     init {
+        orientation = HORIZONTAL
         setBackgroundColor(Color.parseColor("#CC000000"))
         val dp = { v: Int -> (v * resources.displayMetrics.density).toInt() }
-        minimumWidth = dp(200)
-        minimumHeight = dp(60)
-        setPadding(dp(16), dp(8), dp(16), dp(8))
+        setPadding(dp(4), dp(4), dp(4), dp(4))
 
-        val label = TextView(context).apply {
-            text = "WR"
+        // 손잡이 (PR 6에서 드래그 구현)
+        addView(TextView(context).apply {
+            text = "≡"
             setTextColor(Color.WHITE)
-            textSize = 16f
+            textSize = 18f
+            gravity = Gravity.CENTER
+            layoutParams = LayoutParams(dp(28), LayoutParams.MATCH_PARENT)
+        })
+
+        // 슬롯 5개 stack
+        val slots = LinearLayout(context).apply {
+            orientation = VERTICAL
             layoutParams = LayoutParams(
                 LayoutParams.WRAP_CONTENT,
-                LayoutParams.WRAP_CONTENT,
-                Gravity.CENTER
+                LayoutParams.WRAP_CONTENT
             )
         }
-        addView(label)
+        for (i in 1..5) {
+            slots.addView(SlotView(context, i))
+        }
+        addView(slots)
     }
 }
