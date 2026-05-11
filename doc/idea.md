@@ -14,3 +14,6 @@
 - **iOS** — 로딩화면 분석기. [`ios/`](ios/)
 - **추천 (v1.x)** — 라인별 추천 + 티어표 (Railway + lolm.qq). [`recommendation/`](recommendation/)
 - **조합 (v1.x 이후)** — 시너지 / 카운터 (자체 태그 + 매트릭스). [`composition/`](composition/)
+
+## 버전 노트
+- [v0.1.0 — MVP](versions/version.0.1.0.md)
