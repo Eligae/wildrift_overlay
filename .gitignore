@@ -31,3 +31,8 @@ local.properties
 
 # macOS
 .DS_Store
+
+# Node.js (server)
+server/node_modules/
+server/dist/
+server/.env
