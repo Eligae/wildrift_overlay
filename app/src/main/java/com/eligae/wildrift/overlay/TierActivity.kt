@@ -1,6 +1,7 @@
 package com.eligae.wildrift.overlay
 
 import android.os.Bundle
+import androidx.core.content.ContextCompat
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -19,8 +20,15 @@ class TierActivity : AppCompatActivity() {
     private lateinit var tabLayout: TabLayout
     private lateinit var recycler: RecyclerView
     private lateinit var status: TextView
-    private val adapter = TierAdapter()
+    private lateinit var modeRecommend: TextView
+    private lateinit var modeTable: TextView
+
+    private val recommendAdapter = RecommendAdapter()
+    private val tierAdapter = TierAdapter()
     private var allLanes: Map<String, List<NormalizedHero>> = emptyMap()
+    private var mode: Mode = Mode.RECOMMEND
+
+    private enum class Mode { RECOMMEND, TABLE }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,22 +37,35 @@ class TierActivity : AppCompatActivity() {
         tabLayout = findViewById(R.id.tab_layout)
         recycler = findViewById(R.id.recycler_tier)
         status = findViewById(R.id.status_text)
+        modeRecommend = findViewById(R.id.mode_recommend)
+        modeTable = findViewById(R.id.mode_table)
 
         recycler.layoutManager = LinearLayoutManager(this)
-        recycler.adapter = adapter
 
         LANES.forEach { lane ->
             tabLayout.addTab(tabLayout.newTab().setText(lane))
         }
         tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-            override fun onTabSelected(tab: TabLayout.Tab) {
-                showLane(LANES[tab.position])
-            }
+            override fun onTabSelected(tab: TabLayout.Tab) = renderCurrent()
             override fun onTabUnselected(tab: TabLayout.Tab) {}
             override fun onTabReselected(tab: TabLayout.Tab) {}
         })
 
+        modeRecommend.setOnClickListener { setMode(Mode.RECOMMEND) }
+        modeTable.setOnClickListener { setMode(Mode.TABLE) }
+
+        setMode(Mode.RECOMMEND)
         load()
+    }
+
+    private fun setMode(newMode: Mode) {
+        mode = newMode
+        val active = ContextCompat.getColor(this, R.color.lol_gold)
+        val inactive = ContextCompat.getColor(this, R.color.lol_ink_soft)
+        modeRecommend.setTextColor(if (mode == Mode.RECOMMEND) active else inactive)
+        modeTable.setTextColor(if (mode == Mode.TABLE) active else inactive)
+        recycler.adapter = if (mode == Mode.RECOMMEND) recommendAdapter else tierAdapter
+        renderCurrent()
     }
 
     private fun load() {
@@ -56,15 +77,18 @@ class TierActivity : AppCompatActivity() {
                 val fmt = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.KOREA)
                     .format(Date(resp.fetchedAt))
                 status.text = getString(R.string.tier_updated, fmt)
-                showLane(LANES[tabLayout.selectedTabPosition.coerceAtLeast(0)])
+                renderCurrent()
             } catch (e: Exception) {
                 status.text = getString(R.string.tier_error, e.message ?: e.javaClass.simpleName)
             }
         }
     }
 
-    private fun showLane(lane: String) {
-        adapter.submit(allLanes[lane] ?: emptyList())
+    private fun renderCurrent() {
+        val lane = LANES[tabLayout.selectedTabPosition.coerceAtLeast(0)]
+        val list = allLanes[lane] ?: emptyList()
+        if (mode == Mode.RECOMMEND) recommendAdapter.submit(list)
+        else tierAdapter.submit(list)
     }
 
     companion object {

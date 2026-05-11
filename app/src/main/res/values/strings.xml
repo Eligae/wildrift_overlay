@@ -20,4 +20,6 @@
     <string name="tier_error">오류: %1$s</string>
     <string name="open_tier">티어 보기</string>
     <string name="win_label">WIN</string>
+    <string name="mode_recommend">추천</string>
+    <string name="mode_table">전체</string>
 </resources>

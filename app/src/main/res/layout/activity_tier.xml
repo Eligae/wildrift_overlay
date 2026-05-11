@@ -7,6 +7,43 @@
     android:background="@color/lol_bg"
     android:fitsSystemWindows="true">
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@color/lol_bg_elev">
+
+        <TextView
+            android:id="@+id/mode_recommend"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:paddingVertical="14dp"
+            android:text="@string/mode_recommend"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:fontFamily="serif" />
+
+        <TextView
+            android:id="@+id/mode_table"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:paddingVertical="14dp"
+            android:text="@string/mode_table"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:fontFamily="serif" />
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/lol_rule" />
+
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tab_layout"
         android:layout_width="match_parent"
@@ -31,7 +68,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"
-        android:paddingHorizontal="8dp"
+        android:paddingHorizontal="12dp"
         android:paddingBottom="16dp" />
 
 </LinearLayout>
