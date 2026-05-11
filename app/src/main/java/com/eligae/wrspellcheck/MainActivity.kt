@@ -23,14 +23,13 @@ class MainActivity : AppCompatActivity() {
         btnStart = findViewById(R.id.btn_start)
 
         btnGrant.setOnClickListener { requestOverlayPermission() }
-        btnStart.setOnClickListener {
-            // PR 3에서 OverlayService 연결
-        }
+        btnStart.setOnClickListener { toggleOverlay() }
     }
 
     override fun onResume() {
         super.onResume()
         refreshPermissionUi()
+        refreshStartButton()
     }
 
     private fun refreshPermissionUi() {
@@ -44,6 +43,21 @@ class MainActivity : AppCompatActivity() {
             btnGrant.isEnabled = true
             btnStart.isEnabled = false
         }
+    }
+
+    private fun refreshStartButton() {
+        btnStart.setText(
+            if (OverlayService.isRunning) R.string.stop_overlay else R.string.start_overlay
+        )
+    }
+
+    private fun toggleOverlay() {
+        if (OverlayService.isRunning) {
+            OverlayService.stop(this)
+        } else {
+            OverlayService.start(this)
+        }
+        btnStart.postDelayed({ refreshStartButton() }, 300)
     }
 
     private fun requestOverlayPermission() {

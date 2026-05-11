@@ -3,6 +3,11 @@
     <string name="app_name">와일드리프트 스펠체크</string>
     <string name="grant_permission">오버레이 권한 부여</string>
     <string name="start_overlay">오버레이 시작</string>
+    <string name="stop_overlay">오버레이 중지</string>
     <string name="permission_granted">권한 부여됨</string>
     <string name="permission_required">오버레이를 띄우려면 [다른 앱 위에 표시] 권한이 필요합니다.</string>
+    <string name="notification_channel_name">오버레이 서비스</string>
+    <string name="notification_channel_desc">오버레이가 떠 있는 동안 표시되는 알림입니다.</string>
+    <string name="notification_title">오버레이 활성</string>
+    <string name="notification_text">와일드리프트 스펠체크가 실행 중입니다.</string>
 </resources>
