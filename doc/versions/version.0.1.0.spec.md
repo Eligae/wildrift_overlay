@@ -2,18 +2,18 @@
 
 ## 시스템
 - minSdk 26 / targetSdk 35.
-- 포그라운드 서비스 `foregroundServiceType="specialUse"` + `<property>` 선언.
-- 알림 채널 `overlay_service`, `IMPORTANCE_LOW`.
+- 패키지: `com.eligae.wildrift.overlay`.
+- 포그라운드 서비스 `foregroundServiceType="specialUse"` + `<property>`.
+- 알림 채널 `overlay_service`, `IMPORTANCE_LOW`. `POST_NOTIFICATIONS` 런타임 요청.
 - 오버레이 flag: `FLAG_NOT_FOCUSABLE | FLAG_NOT_TOUCH_MODAL`.
 
 ## 저장
-SharedPreferences `overlay_state`. 키 `slot_<i>_spell{1,2}{,_ready}`, `overlay_x/y`, `collapsed`.
+SharedPreferences `overlay_state`: `slot_<i>_spell{1,2}{,_ready}`, `overlay_x/y`, `collapse_level`, `scale`.
 
 ## 한계
 - 시작 버튼 비동기 → 300ms postDelay hack.
-- `POST_NOTIFICATIONS` 런타임 권한 미구현 (Android 13+ 알림 안 뜸).
 - 자동 release / Pages 미구현.
-- 챔피언 이름·라인 표시 없음.
+- 챔피언 이름 없음 (라인 약자만 — TOP/JUG/MID/ADC/SUP).
 - 궁극기 추적 제외 (v2 재검토).
 
 ## 실기 검증 결론
@@ -21,4 +21,4 @@ SharedPreferences `overlay_state`. 키 `slot_<i>_spell{1,2}{,_ready}`, `overlay_
 
 ## 코드 위치
 - Manifest: `app/src/main/AndroidManifest.xml`
-- 코드: `app/src/main/java/com/eligae/wrspellcheck/`
+- 코드: `app/src/main/java/com/eligae/wildrift/overlay/`
