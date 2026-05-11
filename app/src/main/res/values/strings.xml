@@ -11,4 +11,6 @@
     <string name="notification_title">오버레이 활성</string>
     <string name="notification_text">와일드리프트 스펠체크가 실행 중입니다.</string>
     <string name="scale_label">오버레이 크기</string>
+    <string name="accessibility_service_label">와일드리프트 채팅 감지</string>
+    <string name="accessibility_desc">와일드리프트 채팅에서 스펠 사용 메시지를 감지합니다.</string>
 </resources>
