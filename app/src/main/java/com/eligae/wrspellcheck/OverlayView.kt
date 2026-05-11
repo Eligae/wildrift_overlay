@@ -30,7 +30,6 @@ class OverlayView(
         setPadding(dp(3), dp(3), dp(3), dp(3))
 
         handleView = TextView(context).apply {
-            text = if (prefs.collapsed) "+" else "−"
             setTextColor(Color.WHITE)
             textSize = 14f
             gravity = Gravity.CENTER
@@ -41,13 +40,13 @@ class OverlayView(
         slotsContainer = LinearLayout(context).apply {
             orientation = VERTICAL
             layoutParams = LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
-            visibility = if (prefs.collapsed) View.GONE else View.VISIBLE
         }
         for (i in 1..5) {
             slotsContainer.addView(SlotView(context, i, prefs))
         }
         addView(slotsContainer)
 
+        applyLevel()
         attachHandleGestures(handleView)
     }
 
@@ -76,11 +75,7 @@ class OverlayView(
                     true
                 }
                 MotionEvent.ACTION_UP -> {
-                    if (moved) {
-                        onDragEnd()
-                    } else {
-                        toggleCollapsed()
-                    }
+                    if (moved) onDragEnd() else cycleLevel()
                     true
                 }
                 MotionEvent.ACTION_CANCEL -> {
@@ -92,10 +87,21 @@ class OverlayView(
         }
     }
 
-    private fun toggleCollapsed() {
-        val collapsed = !prefs.collapsed
-        prefs.collapsed = collapsed
-        slotsContainer.visibility = if (collapsed) View.GONE else View.VISIBLE
-        handleView.text = if (collapsed) "+" else "−"
+    private fun cycleLevel() {
+        prefs.collapseLevel = (prefs.collapseLevel + 1) % 3
+        applyLevel()
+    }
+
+    private fun applyLevel() {
+        val level = prefs.collapseLevel
+        handleView.text = HANDLE_LABELS[level]
+        slotsContainer.visibility = if (level == 2) View.GONE else View.VISIBLE
+        for (i in 0 until slotsContainer.childCount) {
+            (slotsContainer.getChildAt(i) as? SlotView)?.setLaneLabelVisible(level == 0)
+        }
+    }
+
+    companion object {
+        private val HANDLE_LABELS = arrayOf("−", "≡", "+")
     }
 }

@@ -13,9 +13,9 @@ class OverlayPrefs(context: Context) {
         get() = prefs.getInt("overlay_y", 200)
         set(value) = prefs.edit().putInt("overlay_y", value).apply()
 
-    var collapsed: Boolean
-        get() = prefs.getBoolean("collapsed", false)
-        set(value) = prefs.edit().putBoolean("collapsed", value).apply()
+    var collapseLevel: Int
+        get() = prefs.getInt("collapse_level", 0)
+        set(value) = prefs.edit().putInt("collapse_level", value.coerceIn(0, 2)).apply()
 
     fun loadSlot(index: Int): SlotState {
         val k = "slot_$index"

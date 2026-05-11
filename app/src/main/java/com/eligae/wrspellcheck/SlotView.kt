@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
+import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 
@@ -15,6 +16,7 @@ class SlotView(
 ) : LinearLayout(context) {
 
     private var state = prefs.loadSlot(slotIndex)
+    private val laneLabel: TextView
     private val spell1Button: TextView
     private val spell2Button: TextView
     private val handler = Handler(Looper.getMainLooper())
@@ -34,13 +36,14 @@ class SlotView(
             topMargin = dp(1)
         }
 
-        addView(TextView(context).apply {
+        laneLabel = TextView(context).apply {
             text = LANE_LABELS.getOrElse(slotIndex - 1) { "?" }
             setTextColor(Color.WHITE)
             textSize = 9f
             gravity = Gravity.CENTER
             layoutParams = LayoutParams(dp(22), LayoutParams.MATCH_PARENT)
-        })
+        }
+        addView(laneLabel)
 
         spell1Button = button().also { addView(it) }
         spell2Button = button().also { addView(it) }
@@ -57,6 +60,10 @@ class SlotView(
     override fun onDetachedFromWindow() {
         handler.removeCallbacks(tick)
         super.onDetachedFromWindow()
+    }
+
+    fun setLaneLabelVisible(visible: Boolean) {
+        laneLabel.visibility = if (visible) View.VISIBLE else View.GONE
     }
 
     private fun toggle(which: SlotButton) {
