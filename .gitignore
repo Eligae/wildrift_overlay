@@ -1,0 +1,33 @@
+# Gradle
+.gradle/
+build/
+
+# Android build outputs
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+bin/
+gen/
+out/
+release/
+
+# Local
+local.properties
+*.iml
+.idea/
+
+# Native build
+.externalNativeBuild/
+.cxx/
+
+# Keystore
+*.jks
+*.keystore
+
+# Logs
+*.log
+
+# macOS
+.DS_Store
