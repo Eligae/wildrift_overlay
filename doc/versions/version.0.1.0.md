@@ -11,10 +11,4 @@ Android 인게임 오버레이. 적 5명의 스펠/궁 쿨다운 수동 트래�
 - 손잡이 ≡: 드래그 이동, 더블탭 접기.
 - 자동 저장: 위치·접힘·슬롯 상태.
 
-## 시스템
-minSdk 26 / targetSdk 35. 포그라운드 서비스(specialUse) + 알림. 오버레이 외 터치는 게임으로 통과.
-
-## 한계
-- 시작 버튼 비동기 → 300ms 갱신 hack.
-- `POST_NOTIFICATIONS` 런타임 권한 미구현 (Android 13+ 알림 안 뜸).
-- 자동 release / Pages 미구현.
+부가 명세는 [version.0.1.0.spec.md](version.0.1.0.spec.md).
