@@ -13,4 +13,6 @@
     <string name="scale_label">오버레이 크기</string>
     <string name="accessibility_service_label">와일드리프트 채팅 감지</string>
     <string name="accessibility_desc">와일드리프트 채팅에서 스펠 사용 메시지를 감지합니다.</string>
+    <string name="capture_test">캡처 테스트 (5초 후 1회)</string>
+    <string name="capture_notification_title">화면 캡처 중</string>
 </resources>

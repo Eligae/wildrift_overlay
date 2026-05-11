@@ -1,8 +1,10 @@
 package com.eligae.wildrift.overlay
 
 import android.Manifest
+import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -21,10 +23,19 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnStart: Button
     private lateinit var seekScale: SeekBar
     private lateinit var scaleValue: TextView
+    private lateinit var btnCapture: Button
 
     private val notifPermLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { /* ignore result — 알림은 보조 UX */ }
+
+    private val captureLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK && result.data != null) {
+            ScreenCaptureService.start(this, result.resultCode, result.data!!)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,9 +47,11 @@ class MainActivity : AppCompatActivity() {
         btnStart = findViewById(R.id.btn_start)
         seekScale = findViewById(R.id.seek_scale)
         scaleValue = findViewById(R.id.scale_value)
+        btnCapture = findViewById(R.id.btn_capture)
 
         btnGrant.setOnClickListener { requestOverlayPermission() }
         btnStart.setOnClickListener { toggleOverlay() }
+        btnCapture.setOnClickListener { requestCapture() }
 
         seekScale.progress = ((prefs.scale - SCALE_MIN) / SCALE_STEP).toInt()
         scaleValue.text = formatScale(prefs.scale)
@@ -102,6 +115,11 @@ class MainActivity : AppCompatActivity() {
             Uri.parse("package:$packageName")
         )
         startActivity(intent)
+    }
+
+    private fun requestCapture() {
+        val mpm = getSystemService(MediaProjectionManager::class.java)
+        captureLauncher.launch(mpm.createScreenCaptureIntent())
     }
 
     private fun requestNotificationPermissionIfNeeded() {
