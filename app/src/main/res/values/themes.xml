@@ -1,4 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.WrSpellcheck" parent="Theme.MaterialComponents.DayNight.NoActionBar" />
+    <style name="Theme.WrSpellcheck" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/lol_hex</item>
+        <item name="colorOnPrimary">@color/lol_bg</item>
+        <item name="colorSecondary">@color/lol_gold</item>
+        <item name="android:windowBackground">@color/lol_bg</item>
+        <item name="android:colorBackground">@color/lol_bg</item>
+        <item name="android:textColor">@color/lol_ink</item>
+        <item name="android:textColorHint">@color/lol_ink_dim</item>
+        <item name="materialButtonStyle">@style/LolButton</item>
+    </style>
+
+    <style name="LolButton" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="strokeColor">@color/lol_gold</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="android:textColor">@color/lol_gold_soft</item>
+        <item name="android:fontFamily">serif</item>
+        <item name="cornerRadius">2dp</item>
+        <item name="rippleColor">@color/lol_hex</item>
+    </style>
+
+    <style name="LolTitle">
+        <item name="android:fontFamily">serif</item>
+        <item name="android:textStyle">italic</item>
+        <item name="android:textColor">@color/lol_gold_soft</item>
+        <item name="android:letterSpacing">-0.02</item>
+    </style>
 </resources>

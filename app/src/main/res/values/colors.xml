@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="lol_bg">#0C1117</color>
+    <color name="lol_bg_elev">#131A23</color>
+    <color name="lol_ink">#E8E3D6</color>
+    <color name="lol_ink_soft">#A8A194</color>
+    <color name="lol_ink_dim">#6B6557</color>
+    <color name="lol_gold">#C89B3C</color>
+    <color name="lol_gold_soft">#F0E6D2</color>
+    <color name="lol_hex">#0AC8B9</color>
+    <color name="lol_hex_deep">#005A82</color>
+    <color name="lol_rule">#2A3340</color>
+    <color name="lol_warn">#C8553D</color>
+</resources>

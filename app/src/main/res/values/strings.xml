@@ -15,4 +15,8 @@
     <string name="accessibility_desc">와일드리프트 채팅에서 스펠 사용 메시지를 감지합니다.</string>
     <string name="capture_test">캡처 테스트 (5초 후 1회)</string>
     <string name="capture_notification_title">화면 캡처 중</string>
+    <string name="tier_loading">데이터 가져오는 중…</string>
+    <string name="tier_updated">갱신: %1$s</string>
+    <string name="tier_error">오류: %1$s</string>
+    <string name="open_tier">티어 보기</string>
 </resources>
