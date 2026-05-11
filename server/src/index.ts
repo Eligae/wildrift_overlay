@@ -1,4 +1,7 @@
 import express from "express";
+import cron from "node-cron";
+import { router } from "./routes.js";
+import { refresh } from "./cache.js";
 
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
@@ -6,7 +9,27 @@ const port = Number(process.env.PORT ?? 3000);
 app.get("/", (_req, res) => {
   res.json({ ok: true, service: "wr-spellcheck-server" });
 });
+app.use("/v1", router);
 
-app.listen(port, () => {
-  console.log(`[wr-server] listening on :${port}`);
-});
+async function main() {
+  try {
+    await refresh();
+  } catch (e) {
+    console.error("[init] refresh failed", e);
+  }
+
+  // 매일 03:00 UTC (KST 12:00) 갱신
+  cron.schedule("0 3 * * *", async () => {
+    try {
+      await refresh();
+    } catch (e) {
+      console.error("[cron] refresh failed", e);
+    }
+  });
+
+  app.listen(port, () => {
+    console.log(`[wr-server] listening on :${port}`);
+  });
+}
+
+main();
