@@ -39,7 +39,7 @@ class SlotView(
             setTextColor(Color.WHITE)
             textSize = 9f
             gravity = Gravity.CENTER
-            layoutParams = LayoutParams(dp(18), LayoutParams.MATCH_PARENT)
+            layoutParams = LayoutParams(dp(22), LayoutParams.MATCH_PARENT)
         })
 
         spell1Button = button().also { addView(it) }
@@ -137,7 +137,7 @@ class SlotView(
     private enum class SlotButton { SPELL_1, SPELL_2 }
 
     companion object {
-        private val LANE_LABELS = arrayOf("탑", "정", "미", "원", "서")
+        private val LANE_LABELS = arrayOf("TOP", "JUG", "MID", "ADC", "SUP")
         private val COLOR_IDLE = Color.parseColor("#444444")
         private val COLOR_COUNTDOWN = Color.parseColor("#3355AA")
         private val COLOR_IMMINENT_A = Color.parseColor("#AA3300")
