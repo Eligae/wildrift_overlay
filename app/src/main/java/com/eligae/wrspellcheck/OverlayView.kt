@@ -24,14 +24,14 @@ class OverlayView(
         orientation = HORIZONTAL
         setBackgroundColor(Color.parseColor("#CC000000"))
         val dp = { v: Int -> (v * resources.displayMetrics.density).toInt() }
-        setPadding(dp(4), dp(4), dp(4), dp(4))
+        setPadding(dp(3), dp(3), dp(3), dp(3))
 
         val handleView = TextView(context).apply {
             text = "≡"
             setTextColor(Color.WHITE)
-            textSize = 18f
+            textSize = 14f
             gravity = Gravity.CENTER
-            layoutParams = LayoutParams(dp(28), LayoutParams.MATCH_PARENT)
+            layoutParams = LayoutParams(dp(22), LayoutParams.MATCH_PARENT)
         }
         addView(handleView)
 

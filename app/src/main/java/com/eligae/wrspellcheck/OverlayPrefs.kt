@@ -23,10 +23,8 @@ class OverlayPrefs(context: Context) {
             index = index,
             spell1 = Spell.entries.getOrElse(prefs.getInt("${k}_spell1", 0)) { Spell.FLASH },
             spell2 = Spell.entries.getOrElse(prefs.getInt("${k}_spell2", 1)) { Spell.IGNITE },
-            ultimateCooldownSec = prefs.getInt("${k}_ult_cd", 60),
             spell1ReadyAtEpochMs = prefs.getLong("${k}_spell1_ready", -1L).takeIf { it > 0 },
             spell2ReadyAtEpochMs = prefs.getLong("${k}_spell2_ready", -1L).takeIf { it > 0 },
-            ultimateReadyAtEpochMs = prefs.getLong("${k}_ult_ready", -1L).takeIf { it > 0 },
         )
     }
 
@@ -35,10 +33,8 @@ class OverlayPrefs(context: Context) {
         prefs.edit().apply {
             putInt("${k}_spell1", state.spell1.ordinal)
             putInt("${k}_spell2", state.spell2.ordinal)
-            putInt("${k}_ult_cd", state.ultimateCooldownSec)
             putLong("${k}_spell1_ready", state.spell1ReadyAtEpochMs ?: -1L)
             putLong("${k}_spell2_ready", state.spell2ReadyAtEpochMs ?: -1L)
-            putLong("${k}_ult_ready", state.ultimateReadyAtEpochMs ?: -1L)
         }.apply()
     }
 }

@@ -10,8 +10,4 @@ enum class Spell(val label: String, val defaultCooldownSec: Int) {
     SMITE("S", 15);
 
     fun next(): Spell = entries[(ordinal + 1) % entries.size]
-
-    companion object {
-        val ULTIMATE_PRESETS = listOf(60, 75, 90, 105, 120)
-    }
 }
