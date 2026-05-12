@@ -160,26 +160,22 @@ class SlotView(
     }
 
     private fun render() {
-        renderButton(spell1Button, state.spell1.label, state.spell1ReadyAtEpochMs)
-        renderButton(spell2Button, state.spell2.label, state.spell2ReadyAtEpochMs)
+        renderButton(spell1Button, state.spell1, state.spell1ReadyAtEpochMs)
+        renderButton(spell2Button, state.spell2, state.spell2ReadyAtEpochMs)
     }
 
-    private fun renderButton(btn: TextView, idleLabel: String, readyAt: Long?) {
+    private fun renderButton(btn: TextView, spell: Spell, readyAt: Long?) {
+        btn.setBackgroundResource(spell.iconRes)
         if (readyAt == null) {
-            btn.text = idleLabel
-            btn.setBackgroundColor(COLOR_IDLE)
+            btn.text = ""
+            btn.background?.alpha = 255
             return
         }
         val now = System.currentTimeMillis()
         val remaining = ((readyAt - now + 999) / 1000).toInt().coerceAtLeast(0)
         btn.text = remaining.toString()
-        btn.setBackgroundColor(
-            when {
-                remaining > 10 -> COLOR_COUNTDOWN
-                remaining > 0 -> if (remaining % 2 == 0) COLOR_IMMINENT_A else COLOR_IMMINENT_B
-                else -> COLOR_IDLE
-            }
-        )
+        btn.background?.alpha = 100  // 카운트다운 중에는 아이콘 흐리게
+        btn.setTextColor(if (remaining > 10) Color.WHITE else Color.parseColor("#FF6633"))
     }
 
     private fun button(): TextView {
