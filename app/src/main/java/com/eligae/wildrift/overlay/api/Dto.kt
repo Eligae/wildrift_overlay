@@ -38,6 +38,7 @@ data class ChampionEntry(
 
 data class ChampionsResponse(
     val champions: List<ChampionEntry>,
+    val fetchedAt: Long? = null,
 )
 
 data class SynergySuggestion(

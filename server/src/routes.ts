@@ -16,6 +16,7 @@ router.get("/tier", (req, res) => {
     res.status(503).json({ error: "no data yet" });
     return;
   }
+  res.set("Cache-Control", "public, max-age=21600"); // 6시간
   const laneParam = typeof req.query.lane === "string" ? req.query.lane.toUpperCase() : null;
   if (laneParam && (LANE_ORDER as string[]).includes(laneParam)) {
     const key = laneParam as LaneKey;
@@ -42,7 +43,8 @@ router.get("/champions", async (_req, res) => {
         avatar: heroes[heroId]?.avatar ?? "",
       }))
       .sort((a, b) => a.krName.localeCompare(b.krName, "ko"));
-    res.json({ champions: list });
+    res.set("Cache-Control", "public, max-age=43200"); // 12시간 (한국어명 거의 안 변함)
+    res.json({ champions: list, fetchedAt: Date.now() });
   } catch (e) {
     res.status(500).json({ error: String(e instanceof Error ? e.message : e) });
   }

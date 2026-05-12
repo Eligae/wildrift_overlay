@@ -21,6 +21,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import coil.load
 import com.eligae.wildrift.overlay.api.ApiClient
+import com.eligae.wildrift.overlay.api.CachePolicy
 import com.eligae.wildrift.overlay.api.ChampionEntry
 import com.eligae.wildrift.overlay.api.ChampionsCache
 import kotlinx.coroutines.launch
@@ -62,8 +63,12 @@ class CompositionActivity : AppCompatActivity() {
         cache = ChampionsCache(this)
         setMode(Mode.SYNERGY)
 
-        // 캐시 즉시 표시 (있으면)
-        cache.load()?.let { champions = it.champions }
+        val cached = cache.load()
+        if (cached != null) {
+            champions = cached.champions
+            val fresh = cached.fetchedAt?.let { CachePolicy.isFresh(it) } ?: false
+            if (fresh) return  // 캐시 fresh — fetch 생략
+        }
         loadChampions()
     }
 
@@ -79,7 +84,6 @@ class CompositionActivity : AppCompatActivity() {
                 if (champions.isEmpty()) {
                     status.text = getString(R.string.tier_error, e.message ?: e.javaClass.simpleName)
                 }
-                // 캐시 살아 있으면 그대로 사용
             }
         }
     }

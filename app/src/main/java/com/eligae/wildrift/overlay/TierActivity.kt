@@ -8,6 +8,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.eligae.wildrift.overlay.api.ApiClient
+import com.eligae.wildrift.overlay.api.CachePolicy
 import com.eligae.wildrift.overlay.api.NormalizedHero
 import com.eligae.wildrift.overlay.api.TierAllResponse
 import com.eligae.wildrift.overlay.api.TierCache
@@ -24,6 +25,7 @@ class TierActivity : AppCompatActivity() {
     private lateinit var status: TextView
     private lateinit var modeRecommend: TextView
     private lateinit var modeTable: TextView
+    private lateinit var btnRefresh: TextView
     private lateinit var cache: TierCache
 
     private val recommendAdapter = RecommendAdapter()
@@ -42,6 +44,7 @@ class TierActivity : AppCompatActivity() {
         status = findViewById(R.id.status_text)
         modeRecommend = findViewById(R.id.mode_recommend)
         modeTable = findViewById(R.id.mode_table)
+        btnRefresh = findViewById(R.id.btn_refresh)
         cache = TierCache(this)
 
         recycler.layoutManager = LinearLayoutManager(this)
@@ -57,12 +60,16 @@ class TierActivity : AppCompatActivity() {
 
         modeRecommend.setOnClickListener { setMode(Mode.RECOMMEND) }
         modeTable.setOnClickListener { setMode(Mode.TABLE) }
+        btnRefresh.setOnClickListener { load(force = true) }
 
         setMode(Mode.RECOMMEND)
 
-        // 캐시 즉시 표시 (있으면)
-        cache.load()?.let { applyResponse(it, fromCache = true) }
-        load()
+        val cached = cache.load()
+        if (cached != null) {
+            applyResponse(cached, fromCache = true)
+            if (CachePolicy.isFresh(cached.fetchedAt)) return  // 캐시 fresh — fetch 생략
+        }
+        load(force = false)
     }
 
     private fun setMode(newMode: Mode) {
@@ -75,8 +82,8 @@ class TierActivity : AppCompatActivity() {
         renderCurrent()
     }
 
-    private fun load() {
-        if (allLanes.isEmpty()) status.text = getString(R.string.tier_loading)
+    private fun load(force: Boolean) {
+        if (allLanes.isEmpty() || force) status.text = getString(R.string.tier_loading)
         lifecycleScope.launch {
             try {
                 val resp = ApiClient.api.getTierAll()
@@ -86,7 +93,6 @@ class TierActivity : AppCompatActivity() {
                 if (allLanes.isEmpty()) {
                     status.text = getString(R.string.tier_error, e.message ?: e.javaClass.simpleName)
                 }
-                // 캐시가 이미 표시 중이면 status는 그대로 둠
             }
         }
     }
