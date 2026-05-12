@@ -5,6 +5,9 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.util.Log
 import com.eligae.wildrift.overlay.api.ChampionsCache
+import com.eligae.wildrift.overlay.history.MatchHistoryStore
+import com.eligae.wildrift.overlay.history.MatchRecord
+import com.eligae.wildrift.overlay.model.MatchResult
 import com.eligae.wildrift.overlay.parse.ChatParser
 import com.eligae.wildrift.overlay.parse.LoadingScreenParser
 import com.eligae.wildrift.overlay.prefs.OverlayPrefs
@@ -22,6 +25,8 @@ internal class OcrProcessor(
     /** broadcast action — Service.companion에 박힌 상수를 재사용. */
     private val actionLoadingDetected: String,
     private val extraEnemies: String,
+    /** 종료 감지 시 verify-flow 트리거 (MatchRecord id 전달). */
+    private val onMatchEnded: (matchId: Long) -> Unit,
     /** OCR 1회가 끝나면 호출 (성공/실패 무관). */
     private val onDone: () -> Unit,
 ) {
@@ -94,6 +99,30 @@ internal class OcrProcessor(
             return
         }
 
+        // 종료 감지 — in_match 상태에서 승/패 시그널이 나오면 MatchRecord 저장 후 verify-flow.
+        if (prefs.matchStartedAtMs > 0L && !prefs.matchEndDetected) {
+            val matchResult = detectEnd(joined)
+            if (matchResult != null) {
+                val id = System.currentTimeMillis()
+                val enemies = (1..5).mapNotNull { prefs.loadSlot(it).championName }
+                val allies = prefs.allyAnchor
+                val record = MatchRecord(
+                    id = id,
+                    startedAtMs = prefs.matchStartedAtMs,
+                    endedAtMs = id,
+                    result = matchResult,
+                    enemies = enemies,
+                    allies = allies,
+                    userVerified = false,
+                )
+                MatchHistoryStore(context.applicationContext).add(record)
+                prefs.matchEndDetected = true
+                Log.d(TAG, "MATCH END detected: $matchResult, record id=$id")
+                onMatchEnded(id)
+                return
+            }
+        }
+
         val locs = result.textBlocks.mapNotNull { tb ->
             val box = tb.boundingBox ?: return@mapNotNull null
             LoadingScreenParser.TextLoc(
@@ -129,6 +158,14 @@ internal class OcrProcessor(
         }
     }
 
+    private fun detectEnd(text: String): MatchResult? {
+        return when {
+            WIN_SIGNALS.any { text.contains(it) } -> MatchResult.WIN
+            LOSE_SIGNALS.any { text.contains(it) } -> MatchResult.LOSE
+            else -> null
+        }
+    }
+
     private fun broadcastEnemiesIfPass(
         teams: LoadingScreenParser.Teams,
         prefs: OverlayPrefs,
@@ -148,6 +185,11 @@ internal class OcrProcessor(
         }
         for (i in (teams.enemies.size + 1)..5) {
             prefs.setSlotChampion(i, null)
+        }
+        // 새 게임 시작 마킹 (종료 감지에 쓰임).
+        if (prefs.matchStartedAtMs == 0L || prefs.matchEndDetected) {
+            prefs.matchStartedAtMs = System.currentTimeMillis()
+            prefs.matchEndDetected = false
         }
         val bi = Intent(actionLoadingDetected).apply {
             setPackage(context.packageName)
@@ -175,5 +217,7 @@ internal class OcrProcessor(
             "챔피언 변경",
             "재시작",
         )
+        private val WIN_SIGNALS = listOf("승리", "VICTORY", "Victory")
+        private val LOSE_SIGNALS = listOf("패배", "DEFEAT", "Defeat")
     }
 }

@@ -34,6 +34,7 @@
     <string name="update_available">새 버전 %1$s 사용 가능</string>
     <string name="update_open">보기</string>
     <string name="open_calibration">OCR 영역 설정</string>
+    <string name="open_match_history">전적 보기</string>
     <string name="calib_title">OCR ROI 캘리브레이션</string>
     <string name="calib_no_capture">캡처 PNG가 없습니다. 메인 화면에서 캡처를 한 번 진행한 후 다시 들어오세요.</string>
     <string name="calib_reset">초기화</string>

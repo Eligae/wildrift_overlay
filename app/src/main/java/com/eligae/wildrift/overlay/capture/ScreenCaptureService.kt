@@ -71,6 +71,7 @@ class ScreenCaptureService : Service() {
             context = this,
             actionLoadingDetected = ACTION_LOADING_DETECTED,
             extraEnemies = EXTRA_ENEMIES,
+            onMatchEnded = { matchId -> notifyMatchEnded(matchId) },
             onDone = { scheduleNext() },
         )
 
@@ -88,12 +89,40 @@ class ScreenCaptureService : Service() {
         for (i in 1..5) prefs.setSlotChampion(i, null)
         prefs.allyAnchor = emptyList()
         prefs.allyAnchorAtMs = 0L
+        prefs.matchStartedAtMs = 0L
+        prefs.matchEndDetected = false
         val bi = Intent(ACTION_LOADING_DETECTED).apply {
             setPackage(packageName)
             putStringArrayListExtra(EXTRA_ENEMIES, ArrayList())
         }
         sendBroadcast(bi)
-        Log.d(TAG, "Session reset (slots + anchor cleared)")
+        Log.d(TAG, "Session reset (slots + anchor + match cleared)")
+    }
+
+    /**
+     * 매치 종료 감지 시 verify-flow를 띄우는 알림 발신.
+     * 사용자가 알림 탭하면 [com.eligae.wildrift.overlay.ui.VerifyMatchActivity] 시작.
+     */
+    private fun notifyMatchEnded(matchId: Long) {
+        val verifyIntent = Intent().apply {
+            setClassName(this@ScreenCaptureService, "com.eligae.wildrift.overlay.ui.VerifyMatchActivity")
+            putExtra("match_id", matchId)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val pi = android.app.PendingIntent.getActivity(
+            this, 0, verifyIntent,
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE,
+        )
+        val notif = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_menu_view)
+            .setContentTitle("게임 종료 감지")
+            .setContentText("매핑이 맞는지 확인해 주세요")
+            .setContentIntent(pi)
+            .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .build()
+        getSystemService(NotificationManager::class.java)
+            .notify(NOTIFICATION_ID_VERIFY, notif)
     }
 
     private fun startInForeground() {
@@ -163,6 +192,7 @@ class ScreenCaptureService : Service() {
         private const val TAG = "WRCapture"
         private const val CHANNEL_ID = "capture_service"
         private const val NOTIFICATION_ID = 2
+        private const val NOTIFICATION_ID_VERIFY = 3
         private const val INITIAL_DELAY_MS = 3_000L
         private const val INTERVAL_MS = 3_000L
         const val EXTRA_RESULT_CODE = "resultCode"

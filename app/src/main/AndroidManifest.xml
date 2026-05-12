@@ -37,6 +37,14 @@
             android:name=".ui.CalibrationActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".ui.VerifyMatchActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.MatchHistoryActivity"
+            android:exported="false" />
+
         <service
             android:name=".floating.OverlayService"
             android:exported="false"

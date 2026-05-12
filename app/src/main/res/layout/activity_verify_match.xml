@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/lol_bg"
+    android:fitsSystemWindows="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:id="@+id/verify_result"
+            style="@style/LolTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="28sp" />
+
+        <TextView
+            android:id="@+id/verify_time"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="@color/lol_ink_dim"
+            android:textSize="12sp" />
+
+        <View
+            android:layout_width="48dp"
+            android:layout_height="1dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="24dp"
+            android:background="@color/lol_gold" />
+
+        <TextView
+            style="@style/LolTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="적팀"
+            android:textSize="14sp" />
+
+        <LinearLayout
+            android:id="@+id/enemy_row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="24dp"
+            android:orientation="horizontal"
+            android:weightSum="5" />
+
+        <TextView
+            style="@style/LolTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="우리 팀"
+            android:textSize="14sp" />
+
+        <LinearLayout
+            android:id="@+id/ally_row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="24dp"
+            android:orientation="horizontal"
+            android:weightSum="5" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="24dp"
+            android:background="@color/lol_rule" />
+
+        <Button
+            android:id="@+id/btn_verify_ok"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="맞아요 — 저장" />
+
+        <Button
+            android:id="@+id/btn_verify_cancel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="나중에" />
+
+    </LinearLayout>
+
+</ScrollView>

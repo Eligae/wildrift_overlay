@@ -38,6 +38,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnTier: Button
     private lateinit var btnComposition: Button
     private lateinit var btnCalibration: Button
+    private lateinit var btnMatchHistory: Button
     private lateinit var updateBanner: LinearLayout
     private lateinit var updateBannerText: TextView
     private lateinit var updateBannerOpen: TextView
@@ -72,6 +73,7 @@ class MainActivity : AppCompatActivity() {
         btnTier = findViewById(R.id.btn_tier)
         btnComposition = findViewById(R.id.btn_composition)
         btnCalibration = findViewById(R.id.btn_calibration)
+        btnMatchHistory = findViewById(R.id.btn_match_history)
         updateBanner = findViewById(R.id.update_banner)
         updateBannerText = findViewById(R.id.update_banner_text)
         updateBannerOpen = findViewById(R.id.update_banner_open)
@@ -83,6 +85,7 @@ class MainActivity : AppCompatActivity() {
         btnTier.setOnClickListener { startActivity(Intent(this, TierActivity::class.java)) }
         btnComposition.setOnClickListener { startActivity(Intent(this, CompositionActivity::class.java)) }
         btnCalibration.setOnClickListener { startActivity(Intent(this, CalibrationActivity::class.java)) }
+        btnMatchHistory.setOnClickListener { startActivity(Intent(this, MatchHistoryActivity::class.java)) }
 
         seekScale.progress = ((prefs.scale - SCALE_MIN) / SCALE_STEP).toInt()
         scaleValue.text = formatScale(prefs.scale)

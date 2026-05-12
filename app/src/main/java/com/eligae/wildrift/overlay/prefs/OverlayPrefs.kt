@@ -61,6 +61,18 @@ class OverlayPrefs(context: Context) {
         get() = prefs.getLong("ally_anchor_at_ms", 0L)
         set(value) = prefs.edit().putLong("ally_anchor_at_ms", value).apply()
 
+    /**
+     * 진행 중 게임 추적 — 풀로딩 broadcast 시 startedAtMs 박힘. 종료 감지 시 end-record 저장 후 0 복귀.
+     */
+    var matchStartedAtMs: Long
+        get() = prefs.getLong("match_started_at_ms", 0L)
+        set(value) = prefs.edit().putLong("match_started_at_ms", value).apply()
+
+    /** 종료 감지 중복 방지. end_detected 후 새 broadcast/캡처 시작 시 false 복귀. */
+    var matchEndDetected: Boolean
+        get() = prefs.getBoolean("match_end_detected", false)
+        set(value) = prefs.edit().putBoolean("match_end_detected", value).apply()
+
     fun freshAllyAnchor(maxAgeMs: Long = 30 * 60 * 1000L): List<String>? {
         val ts = allyAnchorAtMs
         if (ts == 0L) return null
