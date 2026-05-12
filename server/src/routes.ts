@@ -2,9 +2,13 @@ import { Router } from "express";
 import { getCache, getHeroes, refresh } from "./cache.js";
 import { LANE_ORDER, LaneKey } from "./fetcher/tencent.js";
 import { suggestSynergy, suggestCounter } from "./composition.js";
+import { authMiddleware } from "./auth.js";
 import krMap from "../data/champion-kr.json" with { type: "json" };
 
 export const router = Router();
+
+// 모든 /v1/* 요청에 토큰 검증 (WR_API_TOKEN 환경변수 설정 시).
+router.use(authMiddleware);
 
 router.get("/lanes", (_req, res) => {
   res.json({ lanes: LANE_ORDER });

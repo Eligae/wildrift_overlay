@@ -15,6 +15,13 @@ object ApiClient {
         .build()
 
     private val client: OkHttpClient = OkHttpClient.Builder()
+        .addInterceptor { chain ->
+            val builder = chain.request().newBuilder()
+            if (BuildConfig.API_TOKEN.isNotBlank()) {
+                builder.addHeader("X-API-Key", BuildConfig.API_TOKEN)
+            }
+            chain.proceed(builder.build())
+        }
         .addInterceptor(HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BASIC
         })

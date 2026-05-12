@@ -1,7 +1,18 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
 }
+
+val localProps = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) load(FileInputStream(file))
+}
+
+val apiBaseUrl: String = localProps.getProperty("WR_API_BASE_URL") ?: "http://192.168.0.35:3000/"
+val apiToken: String = localProps.getProperty("WR_API_TOKEN") ?: ""
 
 android {
     namespace = "com.eligae.wildrift.overlay"
@@ -13,7 +24,8 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "0.0.1"
-        buildConfigField("String", "API_BASE_URL", "\"http://192.168.0.35:3000/\"")
+        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+        buildConfigField("String", "API_TOKEN", "\"$apiToken\"")
     }
 
     buildFeatures {
