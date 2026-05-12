@@ -3,12 +3,18 @@ package com.eligae.wildrift.overlay
 import android.app.AlertDialog
 import android.graphics.Typeface
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
 import android.view.ViewOutlineProvider
+import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -111,16 +117,57 @@ class CompositionActivity : AppCompatActivity() {
             status.text = "챔피언 목록 로딩 중…"
             return
         }
-        val names = champions.map { it.krName }.toTypedArray()
-        AlertDialog.Builder(this)
+
+        val density = resources.displayMetrics.density
+        val pad = (16 * density).toInt()
+        val container = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(pad, pad, pad, 0)
+        }
+        val edit = EditText(this).apply {
+            hint = "챔피언 검색"
+        }
+        container.addView(edit)
+
+        val nameList = champions.map { it.krName }.toMutableList()
+        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, nameList)
+        val listView = ListView(this).apply {
+            this.adapter = adapter
+        }
+        container.addView(
+            listView,
+            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (400 * density).toInt())
+        )
+
+        val dialog = AlertDialog.Builder(this)
             .setTitle("챔피언 선택")
-            .setItems(names) { _, which ->
-                val picked = champions[which]
-                if (mode == Mode.SYNERGY) synergyPicks[index] = picked
-                else counterPick = picked
-                rebuildPickerRow()
+            .setView(container)
+            .setNegativeButton("취소", null)
+            .create()
+
+        edit.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                val q = s?.toString()?.trim().orEmpty()
+                val filtered = if (q.isBlank()) champions
+                else champions.filter { it.krName.contains(q) }
+                adapter.clear()
+                adapter.addAll(filtered.map { it.krName })
+                adapter.notifyDataSetChanged()
             }
-            .show()
+        })
+
+        listView.setOnItemClickListener { _, _, position, _ ->
+            val name = adapter.getItem(position) ?: return@setOnItemClickListener
+            val picked = champions.firstOrNull { it.krName == name } ?: return@setOnItemClickListener
+            if (mode == Mode.SYNERGY) synergyPicks[index] = picked
+            else counterPick = picked
+            rebuildPickerRow()
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     private fun run() {
