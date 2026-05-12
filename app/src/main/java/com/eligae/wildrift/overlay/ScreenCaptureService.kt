@@ -209,7 +209,9 @@ class ScreenCaptureService : Service() {
                     }
                     val rotatedFrameHeight = scaled.width
                     val teams = LoadingScreenParser.parseTeams(locs, rotatedFrameHeight)
-                    if (teams.enemies.isNotEmpty()) {
+                    // 인게임 캡처에서 닉네임/시스템 메시지 1~2개만 매칭되는 경우 슬롯이 잘못 박힘.
+                    // 풀스크린 로딩 화면이라야 적/동맹 합쳐 보통 8명 이상 잡힘 — 임계값 가드.
+                    if (teams.enemies.size + teams.allies.size >= 6 && teams.enemies.size >= 3) {
                         Log.d(TAG, "LOADING ENEMIES (TOP→SUP): ${teams.enemies}")
                         Log.d(TAG, "LOADING ALLIES  (TOP→SUP): ${teams.allies}")
                         val overlayPrefs = OverlayPrefs(applicationContext)
