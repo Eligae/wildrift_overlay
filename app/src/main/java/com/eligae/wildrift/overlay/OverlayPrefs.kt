@@ -26,6 +26,27 @@ class OverlayPrefs(context: Context) {
         get() = prefs.getFloat("bg_alpha", 0.8f)
         set(value) = prefs.edit().putFloat("bg_alpha", value.coerceIn(0.2f, 1.0f)).apply()
 
+    /**
+     * OCR ROI 비율 (회전된 frame 기준 0~1).
+     * 기본 (0,0,1,1) = 전체 화면. 사용자 캘리브레이션 시 좁혀짐.
+     */
+    var roiLeft: Float
+        get() = prefs.getFloat("roi_left", 0f)
+        set(v) = prefs.edit().putFloat("roi_left", v.coerceIn(0f, 1f)).apply()
+    var roiTop: Float
+        get() = prefs.getFloat("roi_top", 0f)
+        set(v) = prefs.edit().putFloat("roi_top", v.coerceIn(0f, 1f)).apply()
+    var roiRight: Float
+        get() = prefs.getFloat("roi_right", 1f)
+        set(v) = prefs.edit().putFloat("roi_right", v.coerceIn(0f, 1f)).apply()
+    var roiBottom: Float
+        get() = prefs.getFloat("roi_bottom", 1f)
+        set(v) = prefs.edit().putFloat("roi_bottom", v.coerceIn(0f, 1f)).apply()
+
+    val hasCustomRoi: Boolean
+        get() = roiRight > roiLeft && roiBottom > roiTop &&
+            (roiRight - roiLeft < 0.99f || roiBottom - roiTop < 0.99f)
+
     fun loadSlot(index: Int): SlotState {
         val k = "slot_$index"
         return SlotState(

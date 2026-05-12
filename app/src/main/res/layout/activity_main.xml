@@ -179,6 +179,13 @@
             android:text="@string/open_composition" />
 
         <Button
+            android:id="@+id/btn_calibration"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/open_calibration" />
+
+        <Button
             android:id="@+id/btn_capture"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

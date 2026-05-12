@@ -33,6 +33,10 @@
             android:name=".CompositionActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".CalibrationActivity"
+            android:exported="false" />
+
         <service
             android:name=".OverlayService"
             android:exported="false"
