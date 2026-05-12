@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.util.Log
+import com.eligae.wildrift.overlay.api.ChampionsCache
 import com.eligae.wildrift.overlay.parse.ChatParser
 import com.eligae.wildrift.overlay.parse.LoadingScreenParser
 import com.eligae.wildrift.overlay.prefs.OverlayPrefs
@@ -103,7 +104,13 @@ internal class OcrProcessor(
         }
         val rotatedFrameHeight = scaled.width
         val anchor = prefs.freshAllyAnchor()
-        val teams = LoadingScreenParser.parseTeams(locs, rotatedFrameHeight, anchor)
+        // ChampionsCache의 모든 한국명을 추가 화이트리스트로 — 정적 KNOWN_NAMES에 없는 챔피언 자동 포함.
+        val dynamicNames = ChampionsCache(context.applicationContext).load()
+            ?.champions
+            ?.map { it.krName }
+            ?.toSet()
+            ?: emptySet()
+        val teams = LoadingScreenParser.parseTeams(locs, rotatedFrameHeight, anchor, dynamicNames)
 
         maybeSaveAllyAnchor(teams.picks, prefs)
         broadcastEnemiesIfPass(teams, prefs, anchor != null)

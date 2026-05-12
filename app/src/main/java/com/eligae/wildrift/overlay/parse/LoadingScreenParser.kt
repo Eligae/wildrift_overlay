@@ -19,37 +19,49 @@ object LoadingScreenParser {
         blocks: List<TextLoc>,
         rotatedFrameHeight: Int,
         allyAnchor: List<String>? = null,
+        extraKnownNames: Set<String> = emptySet(),
     ): Teams {
-        val picks = extractPicks(blocks)
+        val picks = extractPicks(blocks, extraKnownNames)
         if (allyAnchor != null && allyAnchor.isNotEmpty()) {
             val anchorSet = allyAnchor.toSet()
+            // anchor 흐름: anchor 5명을 동맹, 나머지가 적팀.
+            // 한 column(team) 안에서 라인 순서는 centerY (회전 frame에서 y 작은 게 TOP).
             val allies = picks.filter { it.canonical in anchorSet }
-                .sortedBy { it.centerX }
+                .sortedBy { it.centerY }
                 .map { it.canonical }
             val enemies = picks.filter { it.canonical !in anchorSet }
-                .sortedBy { it.centerX }
+                .sortedBy { it.centerY }
                 .map { it.canonical }
                 .take(5)
             return Teams(enemies, allies, picks)
         }
-        // fallback — y로 분리
-        val mid = rotatedFrameHeight / 2f
-        val enemies = picks.filter { it.centerY < mid }
-            .sortedBy { it.centerX }
+        // fallback — picks를 x로 두 column 자동 분리 (회전 frame에서 column이 팀).
+        // x<midX 한 팀, x>=midX 다른 팀. 어느 쪽이 적팀인지는 사용자 캘리브레이션 또는 향후 anchor 결정.
+        // PoC: x 작은 column을 적팀으로 가정 (이전 게임 데이터로 확인됨).
+        // 라인 순서: 한 column 내 y 작은 게 TOP.
+        if (picks.size < 6) {
+            return Teams(emptyList(), emptyList(), picks)
+        }
+        val xs = picks.map { it.centerX }
+        val midX = (xs.min() + xs.max()) / 2f
+        val enemies = picks.filter { it.centerX < midX }
+            .sortedBy { it.centerY }
             .map { it.canonical }
             .take(5)
-        val allies = picks.filter { it.centerY >= mid }
-            .sortedBy { it.centerX }
+        val allies = picks.filter { it.centerX >= midX }
+            .sortedBy { it.centerY }
             .map { it.canonical }
             .take(5)
         return Teams(enemies, allies, picks)
     }
 
-    private fun extractPicks(blocks: List<TextLoc>): List<Pick> {
+    private fun extractPicks(blocks: List<TextLoc>, extra: Set<String>): List<Pick> {
         val picks = mutableListOf<Pick>()
+        val allNames: Sequence<String> = (ChampionRegistry.KNOWN_NAMES.asSequence() + extra.asSequence()).distinct()
         for (b in blocks) {
             val text = b.text.replace("\n", " ")
-            for (name in ChampionRegistry.KNOWN_NAMES) {
+            for (name in allNames) {
+                if (name.isBlank()) continue
                 if (text.contains(name)) {
                     val canon = ChampionRegistry.canonical(name)
                     if (picks.none { it.canonical == canon }) {
@@ -63,11 +75,13 @@ object LoadingScreenParser {
     }
 
     /** 좌표 정보 없는 단순 추출 (fallback). */
-    fun parse(blocks: List<String>): List<String> {
+    fun parse(blocks: List<String>, extraKnownNames: Set<String> = emptySet()): List<String> {
         val found = mutableListOf<String>()
+        val allNames: Sequence<String> = (ChampionRegistry.KNOWN_NAMES.asSequence() + extraKnownNames.asSequence()).distinct()
         for (raw in blocks) {
             val text = raw.replace("\n", " ")
-            for (name in ChampionRegistry.KNOWN_NAMES) {
+            for (name in allNames) {
+                if (name.isBlank()) continue
                 if (text.contains(name)) {
                     val canon = ChampionRegistry.canonical(name)
                     if (!found.contains(canon)) found.add(canon)
