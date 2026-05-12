@@ -27,7 +27,7 @@ object ChatParser {
             val text = raw.replace("\n", " ")
             val champ = ChampionRegistry.KNOWN_NAMES.firstOrNull { text.contains(it) } ?: continue
             val spell = spellAliases.entries.firstOrNull { text.contains(it.key) }?.value ?: continue
-            results.add(Match(champ, spell))
+            results.add(Match(ChampionRegistry.canonical(champ), spell))
         }
         return results
     }

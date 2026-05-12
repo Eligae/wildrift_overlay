@@ -17,8 +17,11 @@ object LoadingScreenParser {
         for (b in blocks) {
             val text = b.text.replace("\n", " ")
             for (name in ChampionRegistry.KNOWN_NAMES) {
-                if (text.contains(name) && picks.none { it.first == name }) {
-                    picks.add(Triple(name, b.centerX, b.centerY))
+                if (text.contains(name)) {
+                    val canon = ChampionRegistry.canonical(name)
+                    if (picks.none { it.first == canon }) {
+                        picks.add(Triple(canon, b.centerX, b.centerY))
+                    }
                     break
                 }
             }
@@ -41,8 +44,9 @@ object LoadingScreenParser {
         for (raw in blocks) {
             val text = raw.replace("\n", " ")
             for (name in ChampionRegistry.KNOWN_NAMES) {
-                if (text.contains(name) && !found.contains(name)) {
-                    found.add(name)
+                if (text.contains(name)) {
+                    val canon = ChampionRegistry.canonical(name)
+                    if (!found.contains(canon)) found.add(canon)
                 }
             }
         }
