@@ -26,8 +26,7 @@ class OverlayView(
 
     init {
         orientation = HORIZONTAL
-        val alpha = (prefs.bgAlpha * 255).toInt().coerceIn(0, 255)
-        setBackgroundColor(Color.argb(alpha, 0, 0, 0))
+        applyBg(prefs.bgAlpha, accent = false)
         setPadding(dp(3), dp(3), dp(3), dp(3))
 
         handleView = TextView(context).apply {
@@ -109,6 +108,15 @@ class OverlayView(
         for (i in 0 until slotsContainer.childCount) {
             (slotsContainer.getChildAt(i) as? SlotView)?.reload()
         }
+    }
+
+    /**
+     * 배경 색·알파 즉시 갱신. accent=true면 hex teal (슬라이더 조작 중 미리보기).
+     */
+    fun applyBg(alpha: Float, accent: Boolean) {
+        val a = (alpha * 255).toInt().coerceIn(0, 255)
+        val color = if (accent) Color.argb(a, 0x0A, 0xC8, 0xB9) else Color.argb(a, 0, 0, 0)
+        setBackgroundColor(color)
     }
 
     companion object {

@@ -96,15 +96,17 @@ class MainActivity : AppCompatActivity() {
         alphaValue.text = formatPercent(prefs.bgAlpha)
         seekAlpha.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
-                alphaValue.text = formatPercent(progressToAlpha(progress))
+                val a = progressToAlpha(progress)
+                alphaValue.text = formatPercent(a)
+                if (fromUser) {
+                    OverlayService.previewBg(this@MainActivity, a, accent = true)
+                }
             }
             override fun onStartTrackingTouch(sb: SeekBar?) {}
             override fun onStopTrackingTouch(sb: SeekBar?) {
                 val newAlpha = progressToAlpha(sb?.progress ?: 6)
-                if (newAlpha != prefs.bgAlpha) {
-                    prefs.bgAlpha = newAlpha
-                    restartOverlayIfRunning()
-                }
+                prefs.bgAlpha = newAlpha
+                OverlayService.previewBg(this@MainActivity, newAlpha, accent = false)
             }
         })
 

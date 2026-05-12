@@ -32,6 +32,14 @@ class OverlayService : Service() {
         }
     }
 
+    private val previewReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val alpha = intent.getFloatExtra(EXTRA_PREVIEW_ALPHA, 0.8f)
+            val accent = intent.getBooleanExtra(EXTRA_PREVIEW_ACCENT, false)
+            (overlayView as? OverlayView)?.applyBg(alpha, accent)
+        }
+    }
+
     override fun onCreate() {
         super.onCreate()
         isRunning = true
@@ -40,11 +48,15 @@ class OverlayService : Service() {
         createNotificationChannel()
 
         val filter = IntentFilter(ScreenCaptureService.ACTION_LOADING_DETECTED)
+        val previewFilter = IntentFilter(ACTION_PREVIEW_BG)
         if (Build.VERSION.SDK_INT >= 33) {
             registerReceiver(loadingReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+            registerReceiver(previewReceiver, previewFilter, Context.RECEIVER_NOT_EXPORTED)
         } else {
             @Suppress("UnspecifiedRegisterReceiverFlag")
             registerReceiver(loadingReceiver, filter)
+            @Suppress("UnspecifiedRegisterReceiverFlag")
+            registerReceiver(previewReceiver, previewFilter)
         }
     }
 
@@ -56,6 +68,7 @@ class OverlayService : Service() {
 
     override fun onDestroy() {
         try { unregisterReceiver(loadingReceiver) } catch (_: Throwable) {}
+        try { unregisterReceiver(previewReceiver) } catch (_: Throwable) {}
         hideOverlay()
         isRunning = false
         super.onDestroy()
@@ -140,6 +153,9 @@ class OverlayService : Service() {
     companion object {
         private const val CHANNEL_ID = "overlay_service"
         private const val NOTIFICATION_ID = 1
+        const val ACTION_PREVIEW_BG = "com.eligae.wildrift.overlay.PREVIEW_BG"
+        const val EXTRA_PREVIEW_ALPHA = "alpha"
+        const val EXTRA_PREVIEW_ACCENT = "accent"
 
         @Volatile
         var isRunning = false
@@ -151,6 +167,16 @@ class OverlayService : Service() {
 
         fun stop(context: Context) {
             context.stopService(Intent(context, OverlayService::class.java))
+        }
+
+        fun previewBg(context: Context, alpha: Float, accent: Boolean) {
+            if (!isRunning) return
+            val intent = Intent(ACTION_PREVIEW_BG).apply {
+                setPackage(context.packageName)
+                putExtra(EXTRA_PREVIEW_ALPHA, alpha)
+                putExtra(EXTRA_PREVIEW_ACCENT, accent)
+            }
+            context.sendBroadcast(intent)
         }
     }
 }
