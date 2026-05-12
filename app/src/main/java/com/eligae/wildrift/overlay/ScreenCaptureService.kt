@@ -20,6 +20,9 @@ import android.os.IBinder
 import android.os.Looper
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions
 import java.io.File
 
 class ScreenCaptureService : Service() {
@@ -28,6 +31,10 @@ class ScreenCaptureService : Service() {
     private var virtualDisplay: VirtualDisplay? = null
     private var imageReader: ImageReader? = null
     private val mainHandler = Handler(Looper.getMainLooper())
+
+    private val recognizer by lazy {
+        TextRecognition.getClient(KoreanTextRecognizerOptions.Builder().build())
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -111,18 +118,20 @@ class ScreenCaptureService : Service() {
             mainHandler.postDelayed({ captureFrame() }, 500)
             return
         }
-        try {
-            saveImage(image)
+        val bitmap = try {
+            imageToBitmap(image)
         } catch (t: Throwable) {
-            Log.e(TAG, "Save failed", t)
-        } finally {
+            Log.e(TAG, "Bitmap convert failed", t)
             image.close()
+            finishWith()
+            return
         }
-        cleanup()
-        stopSelf()
+        image.close()
+        saveBitmap(bitmap)
+        runOcr(bitmap)
     }
 
-    private fun saveImage(image: Image) {
+    private fun imageToBitmap(image: Image): Bitmap {
         val planes = image.planes
         val buffer = planes[0].buffer
         val pixelStride = planes[0].pixelStride
@@ -134,11 +143,51 @@ class ScreenCaptureService : Service() {
             Bitmap.Config.ARGB_8888,
         )
         bitmap.copyPixelsFromBuffer(buffer)
-        val dir = getExternalFilesDir(null)
-        val file = File(dir, "capture_${System.currentTimeMillis()}.png")
-        file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 90, it) }
-        bitmap.recycle()
-        Log.d(TAG, "Saved: ${file.absolutePath} (${image.width}x${image.height})")
+        return bitmap
+    }
+
+    private fun saveBitmap(bitmap: Bitmap) {
+        try {
+            val dir = getExternalFilesDir(null)
+            val file = File(dir, "capture_${System.currentTimeMillis()}.png")
+            file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 90, it) }
+            Log.d(TAG, "Saved: ${file.absolutePath} (${bitmap.width}x${bitmap.height})")
+        } catch (t: Throwable) {
+            Log.e(TAG, "Save failed", t)
+        }
+    }
+
+    private fun runOcr(bitmap: Bitmap) {
+        // 게임 콘텐츠가 가로 → portrait 캡처라 90도 회전 메타.
+        val input = InputImage.fromBitmap(bitmap, 90)
+        recognizer.process(input)
+            .addOnSuccessListener { result ->
+                Log.d(TAG, "OCR ok: ${result.textBlocks.size} blocks, chars=${result.text.length}")
+                val blockTexts = result.textBlocks.map { it.text }
+                for (block in blockTexts) {
+                    Log.d(TAG, "BLOCK: ${block.replace("\n", " | ")}")
+                }
+                val matches = ChatParser.parse(blockTexts)
+                if (matches.isEmpty()) {
+                    Log.d(TAG, "MATCH: none")
+                } else {
+                    for (m in matches) {
+                        Log.d(TAG, "MATCH: ${m.champion} → ${m.spell.name}")
+                    }
+                }
+                bitmap.recycle()
+                finishWith()
+            }
+            .addOnFailureListener { e ->
+                Log.e(TAG, "OCR failed", e)
+                bitmap.recycle()
+                finishWith()
+            }
+    }
+
+    private fun finishWith() {
+        cleanup()
+        stopSelf()
     }
 
     private fun cleanup() {

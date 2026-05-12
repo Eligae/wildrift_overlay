@@ -53,4 +53,5 @@ dependencies {
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.coil)
+    implementation(libs.mlkit.text.recognition.korean)
 }
