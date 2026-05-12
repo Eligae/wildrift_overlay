@@ -6,13 +6,14 @@
 - [플랫폼 결정](platform-decision.md) — Android/iOS 트랙 분리 이유
 - [스펠 기본 쿨다운](spell-cooldowns.md)
 - [ToS / 안전성](tos.md)
+- [디자인 가이드](design.md) — LoL 톤 + 한눈 정보 밀도
 - [GitHub Pages 소개 페이지](website.md)
 - [결정 보류 (메타)](pending.md)
 
 ## 트랙
-- **Android** — 인게임 수동 오버레이. [`android/`](android/)
+- **Android** — 인게임 수동 오버레이 + 자동 채팅 감지(OCR). [`android/`](android/)
 - **iOS** — 로딩화면 분석기. [`ios/`](ios/)
-- **추천 (v1.x)** — 라인별 추천 + 티어표 (Railway + lolm.qq). [`recommendation/`](recommendation/)
+- **추천 (v1.x)** — 라인별 추천 카드 + 티어표 (Railway + lolm.qq). [`recommendation/`](recommendation/)
 - **조합 (v1.x 이후)** — 시너지 / 카운터 (자체 태그 + 매트릭스). [`composition/`](composition/)
 
 ## 버전 노트
