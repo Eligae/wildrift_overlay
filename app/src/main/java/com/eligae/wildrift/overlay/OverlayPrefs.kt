@@ -47,6 +47,25 @@ class OverlayPrefs(context: Context) {
         get() = roiRight > roiLeft && roiBottom > roiTop &&
             (roiRight - roiLeft < 0.99f || roiBottom - roiTop < 0.99f)
 
+    /**
+     * 우리 팀 anchor — 픽 직후 5명만 보여주는 화면에서 추출한 챔피언 5명.
+     * 10명 로딩 화면에서 이 5명을 빼면 적팀이 확정. 30분 지나면 stale.
+     */
+    var allyAnchor: List<String>
+        get() = prefs.getStringSet("ally_anchor", emptySet())?.toList() ?: emptyList()
+        set(value) = prefs.edit().putStringSet("ally_anchor", value.toSet()).apply()
+
+    var allyAnchorAtMs: Long
+        get() = prefs.getLong("ally_anchor_at_ms", 0L)
+        set(value) = prefs.edit().putLong("ally_anchor_at_ms", value).apply()
+
+    fun freshAllyAnchor(maxAgeMs: Long = 30 * 60 * 1000L): List<String>? {
+        val ts = allyAnchorAtMs
+        if (ts == 0L) return null
+        if (System.currentTimeMillis() - ts > maxAgeMs) return null
+        return allyAnchor.takeIf { it.isNotEmpty() }
+    }
+
     fun loadSlot(index: Int): SlotState {
         val k = "slot_$index"
         return SlotState(

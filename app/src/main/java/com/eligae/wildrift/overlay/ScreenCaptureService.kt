@@ -208,13 +208,31 @@ class ScreenCaptureService : Service() {
                         )
                     }
                     val rotatedFrameHeight = scaled.width
-                    val teams = LoadingScreenParser.parseTeams(locs, rotatedFrameHeight)
-                    // 인게임 캡처에서 닉네임/시스템 메시지 1~2개만 매칭되는 경우 슬롯이 잘못 박힘.
-                    // 풀스크린 로딩 화면이라야 적/동맹 합쳐 보통 8명 이상 잡힘 — 임계값 가드.
-                    if (teams.enemies.size + teams.allies.size >= 6 && teams.enemies.size >= 3) {
-                        Log.d(TAG, "LOADING ENEMIES (TOP→SUP): ${teams.enemies}")
+                    val overlayPrefs = OverlayPrefs(applicationContext)
+                    val anchor = overlayPrefs.freshAllyAnchor()
+                    val teams = LoadingScreenParser.parseTeams(locs, rotatedFrameHeight, anchor)
+
+                    // 5명 화면 anchor 저장 — picks가 정확히 5명이고 anchor 미보유 또는 다른 5명일 때.
+                    // (인게임에서 5명 동시 매칭은 거의 안 일어남)
+                    if (teams.picks.size == 5) {
+                        val canonical = teams.picks.map { it.canonical }
+                        if (canonical.toSet() != overlayPrefs.allyAnchor.toSet()) {
+                            overlayPrefs.allyAnchor = canonical
+                            overlayPrefs.allyAnchorAtMs = System.currentTimeMillis()
+                            Log.d(TAG, "ALLY ANCHOR SAVED: $canonical")
+                        }
+                    }
+
+                    // anchor 있으면 enemies 3명 이상이면 broadcast (10명 중 일부 OCR 누락 허용).
+                    // anchor 없으면 fallback — 적+동 합 6명 이상 + 적 3명 이상.
+                    val passBroadcast = if (anchor != null) {
+                        teams.enemies.size >= 3
+                    } else {
+                        teams.enemies.size + teams.allies.size >= 6 && teams.enemies.size >= 3
+                    }
+                    if (passBroadcast) {
+                        Log.d(TAG, "LOADING ENEMIES (TOP→SUP): ${teams.enemies}${if (anchor != null) " [anchor]" else ""}")
                         Log.d(TAG, "LOADING ALLIES  (TOP→SUP): ${teams.allies}")
-                        val overlayPrefs = OverlayPrefs(applicationContext)
                         teams.enemies.forEachIndexed { i, name ->
                             if (i + 1 <= 5) overlayPrefs.setSlotChampion(i + 1, name)
                         }
