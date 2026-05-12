@@ -13,7 +13,14 @@ object LoadingScreenParser {
 
     data class TextLoc(val text: String, val centerX: Float, val centerY: Float)
     data class Pick(val canonical: String, val centerX: Float, val centerY: Float)
-    data class Teams(val enemies: List<String>, val allies: List<String>, val picks: List<Pick>)
+    /**
+     * enemies/allies는 항상 5개 슬롯. 라인 순서 = [TOP, JUG, MID, ADC, SUP].
+     * OCR 누락 시 해당 슬롯이 null — 위치 정확성 우선.
+     */
+    data class Teams(val enemies: List<String?>, val allies: List<String?>, val picks: List<Pick>)
+
+    /** 풀로딩 카드 5개의 y 비율 (rotated frame height 기준 0~1). */
+    private val LANE_Y_RATIOS = listOf(0.234f, 0.365f, 0.496f, 0.626f, 0.757f)
 
     fun parseTeams(
         blocks: List<TextLoc>,
@@ -24,35 +31,42 @@ object LoadingScreenParser {
         val picks = extractPicks(blocks, extraKnownNames)
         if (allyAnchor != null && allyAnchor.isNotEmpty()) {
             val anchorSet = allyAnchor.toSet()
-            // anchor 흐름: anchor 5명을 동맹, 나머지가 적팀.
-            // 한 column(team) 안에서 라인 순서는 centerY (회전 frame에서 y 작은 게 TOP).
-            val allies = picks.filter { it.canonical in anchorSet }
-                .sortedBy { it.centerY }
-                .map { it.canonical }
-            val enemies = picks.filter { it.canonical !in anchorSet }
-                .sortedBy { it.centerY }
-                .map { it.canonical }
-                .take(5)
-            return Teams(enemies, allies, picks)
+            val allyPicks = picks.filter { it.canonical in anchorSet }
+            val enemyPicks = picks.filter { it.canonical !in anchorSet }
+            return Teams(
+                enemies = mapToLaneSlots(enemyPicks, rotatedFrameHeight),
+                allies = mapToLaneSlots(allyPicks, rotatedFrameHeight),
+                picks = picks,
+            )
         }
-        // fallback — picks를 x로 두 column 자동 분리 (회전 frame에서 column이 팀).
-        // x<midX 한 팀, x>=midX 다른 팀. 어느 쪽이 적팀인지는 사용자 캘리브레이션 또는 향후 anchor 결정.
-        // PoC: x 작은 column을 적팀으로 가정 (이전 게임 데이터로 확인됨).
-        // 라인 순서: 한 column 내 y 작은 게 TOP.
+        // fallback — picks를 x column으로 두 팀 분리.
         if (picks.size < 6) {
-            return Teams(emptyList(), emptyList(), picks)
+            return Teams(List(5) { null }, List(5) { null }, picks)
         }
         val xs = picks.map { it.centerX }
         val midX = (xs.min() + xs.max()) / 2f
-        val enemies = picks.filter { it.centerX < midX }
-            .sortedBy { it.centerY }
-            .map { it.canonical }
-            .take(5)
-        val allies = picks.filter { it.centerX >= midX }
-            .sortedBy { it.centerY }
-            .map { it.canonical }
-            .take(5)
-        return Teams(enemies, allies, picks)
+        return Teams(
+            enemies = mapToLaneSlots(picks.filter { it.centerX < midX }, rotatedFrameHeight),
+            allies = mapToLaneSlots(picks.filter { it.centerX >= midX }, rotatedFrameHeight),
+            picks = picks,
+        )
+    }
+
+    /**
+     * 한 팀의 picks를 라인 슬롯 5개에 매핑. 각 pick의 centerY 비율을 [LANE_Y_RATIOS]에 가장
+     * 가까운 인덱스에 박는다. 매핑된 슬롯이 이미 차 있으면 후순위 pick은 버려진다.
+     */
+    private fun mapToLaneSlots(col: List<Pick>, rotatedFrameHeight: Int): List<String?> {
+        if (rotatedFrameHeight <= 0) return List(5) { null }
+        val slots = MutableList<String?>(5) { null }
+        for (pick in col) {
+            val ratio = pick.centerY / rotatedFrameHeight
+            val idx = LANE_Y_RATIOS.indices.minByOrNull {
+                kotlin.math.abs(LANE_Y_RATIOS[it] - ratio)
+            } ?: continue
+            if (slots[idx] == null) slots[idx] = pick.canonical
+        }
+        return slots
     }
 
     private fun extractPicks(blocks: List<TextLoc>, extra: Set<String>): List<Pick> {

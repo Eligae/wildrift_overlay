@@ -104,8 +104,8 @@ internal class OcrProcessor(
             val matchResult = detectEnd(joined)
             if (matchResult != null) {
                 val id = System.currentTimeMillis()
-                val enemies = (1..5).mapNotNull { prefs.loadSlot(it).championName }
-                val allies = prefs.allyAnchor
+                val enemies = (1..5).map { prefs.loadSlot(it).championName ?: "" }
+                val allies = prefs.allyAnchor.map { it.ifBlank { "" } }
                 val record = MatchRecord(
                     id = id,
                     startedAtMs = prefs.matchStartedAtMs,
@@ -171,20 +171,20 @@ internal class OcrProcessor(
         prefs: OverlayPrefs,
         anchorActive: Boolean,
     ) {
+        val enemyCount = teams.enemies.count { it != null }
+        val allyCount = teams.allies.count { it != null }
         val pass = if (anchorActive) {
-            teams.enemies.size >= 3
+            enemyCount >= 3
         } else {
-            teams.enemies.size + teams.allies.size >= 6 && teams.enemies.size >= 3
+            enemyCount + allyCount >= 6 && enemyCount >= 3
         }
         if (!pass) return
 
         Log.d(TAG, "LOADING ENEMIES (TOP→SUP): ${teams.enemies}${if (anchorActive) " [anchor]" else ""}")
         Log.d(TAG, "LOADING ALLIES  (TOP→SUP): ${teams.allies}")
-        teams.enemies.forEachIndexed { i, name ->
-            if (i + 1 <= 5) prefs.setSlotChampion(i + 1, name)
-        }
-        for (i in (teams.enemies.size + 1)..5) {
-            prefs.setSlotChampion(i, null)
+        // 슬롯 5개 라인 순서 — null 슬롯은 비워둠 (OCR 누락 라인).
+        for (i in 0 until 5) {
+            prefs.setSlotChampion(i + 1, teams.enemies.getOrNull(i))
         }
         // 새 게임 시작 마킹 (종료 감지에 쓰임).
         if (prefs.matchStartedAtMs == 0L || prefs.matchEndDetected) {
@@ -193,7 +193,10 @@ internal class OcrProcessor(
         }
         val bi = Intent(actionLoadingDetected).apply {
             setPackage(context.packageName)
-            putStringArrayListExtra(extraEnemies, ArrayList(teams.enemies))
+            putStringArrayListExtra(
+                extraEnemies,
+                ArrayList(teams.enemies.map { it ?: "" }),
+            )
         }
         context.sendBroadcast(bi)
     }

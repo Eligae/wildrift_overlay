@@ -4,6 +4,8 @@ import android.app.AlertDialog
 import android.os.Bundle
 import android.view.Gravity
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -127,15 +129,39 @@ class VerifyMatchActivity : AppCompatActivity() {
             Toast.makeText(this, "챔피언 목록이 비어요 — 티어 화면에서 먼저 새로고침해 주세요", Toast.LENGTH_SHORT).show()
             return
         }
-        val items = arrayOf("(비우기)") + names.toTypedArray()
+        val input = AutoCompleteTextView(this).apply {
+            setAdapter(
+                ArrayAdapter(
+                    this@VerifyMatchActivity,
+                    android.R.layout.simple_dropdown_item_1line,
+                    names,
+                ),
+            )
+            threshold = 1
+            hint = "예: 트위 → 트위스티드 페이트 / 트위치"
+            setText(target[idx] ?: "")
+        }
         AlertDialog.Builder(this)
             .setTitle("챔피언 선택")
-            .setItems(items) { _, which ->
-                target[idx] = if (which == 0) null else items[which]
-                renderRow(row, target) { i ->
-                    pickFor(target, i, row)
+            .setView(input)
+            .setPositiveButton("확인") { _, _ ->
+                val typed = input.text.toString().trim()
+                // 정확 매칭 우선, 없으면 prefix 매칭 첫 후보, 그것도 없으면 입력값 그대로 저장.
+                val resolved = when {
+                    typed.isEmpty() -> null
+                    typed in names -> typed
+                    else -> names.firstOrNull { it.startsWith(typed) }
+                        ?: names.firstOrNull { it.contains(typed) }
+                        ?: typed
                 }
+                target[idx] = resolved
+                renderRow(row, target) { i -> pickFor(target, i, row) }
             }
+            .setNeutralButton("비우기") { _, _ ->
+                target[idx] = null
+                renderRow(row, target) { i -> pickFor(target, i, row) }
+            }
+            .setNegativeButton("취소", null)
             .show()
     }
 }
