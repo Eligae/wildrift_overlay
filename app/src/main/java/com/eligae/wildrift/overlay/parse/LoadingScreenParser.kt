@@ -71,7 +71,11 @@ object LoadingScreenParser {
 
     private fun extractPicks(blocks: List<TextLoc>, extra: Set<String>): List<Pick> {
         val picks = mutableListOf<Pick>()
-        val allNames: List<String> = (ChampionRegistry.KNOWN_NAMES + extra).distinct().toList()
+        // 길이 내림차순 정렬 — 짧은 이름이 긴 이름의 부분 fuzzy로 잘못 매칭되는 사고 방지
+        // (예: "신지드" 텍스트에 "진"이 ㅅ↔ㅈ 유사로 매칭되는 false-positive).
+        val allNames: List<String> = (ChampionRegistry.KNOWN_NAMES + extra)
+            .distinct()
+            .sortedByDescending { it.length }
         for (b in blocks) {
             val text = b.text.replace("\n", " ")
             for (name in allNames) {
@@ -91,7 +95,9 @@ object LoadingScreenParser {
     /** 좌표 정보 없는 단순 추출 (fallback). */
     fun parse(blocks: List<String>, extraKnownNames: Set<String> = emptySet()): List<String> {
         val found = mutableListOf<String>()
-        val allNames: List<String> = (ChampionRegistry.KNOWN_NAMES + extraKnownNames).distinct().toList()
+        val allNames: List<String> = (ChampionRegistry.KNOWN_NAMES + extraKnownNames)
+            .distinct()
+            .sortedByDescending { it.length }
         for (raw in blocks) {
             val text = raw.replace("\n", " ")
             for (name in allNames) {

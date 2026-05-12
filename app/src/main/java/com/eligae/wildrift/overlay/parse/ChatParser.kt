@@ -25,7 +25,10 @@ object ChatParser {
 
     fun parse(blocks: List<String>, extraKnownNames: Set<String> = emptySet()): List<Match> {
         val results = mutableListOf<Match>()
-        val allNames: List<String> = (ChampionRegistry.KNOWN_NAMES + extraKnownNames).distinct().toList()
+        // 길이 내림차순 — 짧은 이름이 긴 이름의 부분 fuzzy로 잘못 매칭되는 사고 방지.
+        val allNames: List<String> = (ChampionRegistry.KNOWN_NAMES + extraKnownNames)
+            .distinct()
+            .sortedByDescending { it.length }
         for (raw in blocks) {
             val text = raw.replace("\n", " ")
             val spellEntry = spellAliases.entries.firstOrNull { text.contains(it.key) } ?: continue
