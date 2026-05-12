@@ -18,7 +18,7 @@ import android.view.WindowManager
 import androidx.core.app.NotificationCompat
 import com.eligae.wildrift.overlay.MainActivity
 import com.eligae.wildrift.overlay.R
-import com.eligae.wildrift.overlay.ScreenCaptureService
+import com.eligae.wildrift.overlay.capture.ScreenCaptureService
 import com.eligae.wildrift.overlay.prefs.OverlayPrefs
 
 class OverlayService : Service() {

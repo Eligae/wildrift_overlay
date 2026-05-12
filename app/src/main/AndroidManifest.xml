@@ -47,7 +47,7 @@
         </service>
 
         <service
-            android:name=".ScreenCaptureService"
+            android:name=".capture.ScreenCaptureService"
             android:exported="false"
             android:foregroundServiceType="mediaProjection" />
 

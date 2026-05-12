@@ -1,4 +1,4 @@
-package com.eligae.wildrift.overlay
+package com.eligae.wildrift.overlay.capture
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -20,6 +20,7 @@ import android.os.IBinder
 import android.os.Looper
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.eligae.wildrift.overlay.R
 import com.eligae.wildrift.overlay.parse.ChatParser
 import com.eligae.wildrift.overlay.parse.LoadingScreenParser
 import com.eligae.wildrift.overlay.prefs.OverlayPrefs
