@@ -9,6 +9,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.eligae.wildrift.overlay.api.ApiClient
 import com.eligae.wildrift.overlay.api.NormalizedHero
+import com.eligae.wildrift.overlay.api.TierAllResponse
+import com.eligae.wildrift.overlay.api.TierCache
 import com.google.android.material.tabs.TabLayout
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -22,6 +24,7 @@ class TierActivity : AppCompatActivity() {
     private lateinit var status: TextView
     private lateinit var modeRecommend: TextView
     private lateinit var modeTable: TextView
+    private lateinit var cache: TierCache
 
     private val recommendAdapter = RecommendAdapter()
     private val tierAdapter = TierAdapter()
@@ -39,6 +42,7 @@ class TierActivity : AppCompatActivity() {
         status = findViewById(R.id.status_text)
         modeRecommend = findViewById(R.id.mode_recommend)
         modeTable = findViewById(R.id.mode_table)
+        cache = TierCache(this)
 
         recycler.layoutManager = LinearLayoutManager(this)
 
@@ -55,6 +59,9 @@ class TierActivity : AppCompatActivity() {
         modeTable.setOnClickListener { setMode(Mode.TABLE) }
 
         setMode(Mode.RECOMMEND)
+
+        // 캐시 즉시 표시 (있으면)
+        cache.load()?.let { applyResponse(it, fromCache = true) }
         load()
     }
 
@@ -69,19 +76,26 @@ class TierActivity : AppCompatActivity() {
     }
 
     private fun load() {
-        status.text = getString(R.string.tier_loading)
+        if (allLanes.isEmpty()) status.text = getString(R.string.tier_loading)
         lifecycleScope.launch {
             try {
                 val resp = ApiClient.api.getTierAll()
-                allLanes = resp.lanes
-                val fmt = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.KOREA)
-                    .format(Date(resp.fetchedAt))
-                status.text = getString(R.string.tier_updated, fmt)
-                renderCurrent()
+                cache.save(resp)
+                applyResponse(resp, fromCache = false)
             } catch (e: Exception) {
-                status.text = getString(R.string.tier_error, e.message ?: e.javaClass.simpleName)
+                if (allLanes.isEmpty()) {
+                    status.text = getString(R.string.tier_error, e.message ?: e.javaClass.simpleName)
+                }
+                // 캐시가 이미 표시 중이면 status는 그대로 둠
             }
         }
+    }
+
+    private fun applyResponse(resp: TierAllResponse, fromCache: Boolean) {
+        allLanes = resp.lanes
+        val fmt = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.KOREA).format(Date(resp.fetchedAt))
+        status.text = if (fromCache) "캐시: $fmt" else getString(R.string.tier_updated, fmt)
+        renderCurrent()
     }
 
     private fun renderCurrent() {

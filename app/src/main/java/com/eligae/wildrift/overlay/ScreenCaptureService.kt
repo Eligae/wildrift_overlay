@@ -167,13 +167,17 @@ class ScreenCaptureService : Service() {
                 for (block in blockTexts) {
                     Log.d(TAG, "BLOCK: ${block.replace("\n", " | ")}")
                 }
-                val matches = ChatParser.parse(blockTexts)
-                if (matches.isEmpty()) {
-                    Log.d(TAG, "MATCH: none")
+                val chatMatches = ChatParser.parse(blockTexts)
+                if (chatMatches.isEmpty()) {
+                    Log.d(TAG, "CHAT MATCH: none")
                 } else {
-                    for (m in matches) {
-                        Log.d(TAG, "MATCH: ${m.champion} → ${m.spell.name}")
+                    for (m in chatMatches) {
+                        Log.d(TAG, "CHAT MATCH: ${m.champion} → ${m.spell.name}")
                     }
+                }
+                val loadingPicks = LoadingScreenParser.parse(blockTexts)
+                if (loadingPicks.isNotEmpty()) {
+                    Log.d(TAG, "LOADING: ${loadingPicks.joinToString(", ")}")
                 }
                 bitmap.recycle()
                 finishWith()
