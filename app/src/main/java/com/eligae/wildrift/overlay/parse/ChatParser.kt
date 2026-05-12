@@ -23,17 +23,17 @@ object ChatParser {
         "강타" to Spell.SMITE,
     )
 
-    fun parse(blocks: List<String>): List<Match> {
+    fun parse(blocks: List<String>, extraKnownNames: Set<String> = emptySet()): List<Match> {
         val results = mutableListOf<Match>()
+        val allNames: List<String> = (ChampionRegistry.KNOWN_NAMES + extraKnownNames).distinct().toList()
         for (raw in blocks) {
             val text = raw.replace("\n", " ")
             val spellEntry = spellAliases.entries.firstOrNull { text.contains(it.key) } ?: continue
             val spellIdx = text.indexOf(spellEntry.key)
             // 시스템 메시지 형식 "[닉네임] [챔피언] - [스펠]" 가정.
             // 스펠 앞쪽에서 가장 마지막에 등장한 챔피언명을 진짜 챔피언으로 본다.
-            // (닉네임에 챔피언명이 섞이는 케이스 — 예: 리사호요네 — 의 false-pick 방지)
             val pre = text.substring(0, spellIdx)
-            val champ = ChampionRegistry.KNOWN_NAMES
+            val champ = allNames
                 .mapNotNull { name ->
                     val idx = pre.lastIndexOf(name)
                     if (idx >= 0) name to idx else null

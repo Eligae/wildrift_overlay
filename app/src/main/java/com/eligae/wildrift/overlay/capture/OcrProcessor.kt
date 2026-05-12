@@ -88,8 +88,10 @@ internal class OcrProcessor(
         }
 
         val blockTexts = result.textBlocks.map { it.text }
+        val dynamicForChat = ChampionsCache(context.applicationContext).load()
+            ?.champions?.map { it.krName }?.toSet() ?: emptySet()
         var chatTouched = false
-        for (m in ChatParser.parse(blockTexts)) {
+        for (m in ChatParser.parse(blockTexts, dynamicForChat)) {
             Log.d(TAG, "CHAT MATCH: ${m.champion} → ${m.spell.name}")
             if (triggerSlotSpell(m, prefs)) chatTouched = true
         }
