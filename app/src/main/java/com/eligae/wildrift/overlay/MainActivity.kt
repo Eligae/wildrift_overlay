@@ -25,6 +25,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var scaleValue: TextView
     private lateinit var btnCapture: Button
     private lateinit var btnTier: Button
+    private lateinit var btnComposition: Button
 
     private val notifPermLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -50,11 +51,13 @@ class MainActivity : AppCompatActivity() {
         scaleValue = findViewById(R.id.scale_value)
         btnCapture = findViewById(R.id.btn_capture)
         btnTier = findViewById(R.id.btn_tier)
+        btnComposition = findViewById(R.id.btn_composition)
 
         btnGrant.setOnClickListener { requestOverlayPermission() }
         btnStart.setOnClickListener { toggleOverlay() }
         btnCapture.setOnClickListener { requestCapture() }
         btnTier.setOnClickListener { startActivity(Intent(this, TierActivity::class.java)) }
+        btnComposition.setOnClickListener { startActivity(Intent(this, CompositionActivity::class.java)) }
 
         seekScale.progress = ((prefs.scale - SCALE_MIN) / SCALE_STEP).toInt()
         scaleValue.text = formatScale(prefs.scale)

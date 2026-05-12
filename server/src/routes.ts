@@ -2,6 +2,7 @@ import { Router } from "express";
 import { getCache, refresh } from "./cache.js";
 import { LANE_ORDER, LaneKey } from "./fetcher/tencent.js";
 import { suggestSynergy, suggestCounter } from "./composition.js";
+import krMap from "../data/champion-kr.json" with { type: "json" };
 
 export const router = Router();
 
@@ -29,6 +30,13 @@ router.get("/tier", (req, res) => {
     fetchedAt: cache.fetchedAt,
     lanes: cache.lanes,
   });
+});
+
+router.get("/champions", (_req, res) => {
+  const list = Object.entries(krMap as Record<string, string>)
+    .map(([heroId, krName]) => ({ heroId, krName }))
+    .sort((a, b) => a.krName.localeCompare(b.krName, "ko"));
+  res.json({ champions: list });
 });
 
 router.get("/composition/synergy", (req, res) => {

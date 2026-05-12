@@ -29,3 +29,35 @@ data class TierAllResponse(
 data class LanesResponse(
     val lanes: List<String>,
 )
+
+data class ChampionEntry(
+    val heroId: String,
+    val krName: String,
+)
+
+data class ChampionsResponse(
+    val champions: List<ChampionEntry>,
+)
+
+data class SynergySuggestion(
+    val heroId: String,
+    val krName: String?,
+    val reasons: List<String>,
+)
+
+data class SynergyResponse(
+    val team: List<String>,
+    val suggestions: List<SynergySuggestion>,
+)
+
+data class CounterRef(
+    val heroId: String,
+    val krName: String?,
+)
+
+data class CounterResponse(
+    val enemyHeroId: String,
+    val enemyKrName: String?,
+    val counters: List<CounterRef>,
+    val note: String?,
+)
