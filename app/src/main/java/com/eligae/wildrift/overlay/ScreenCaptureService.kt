@@ -161,10 +161,8 @@ class ScreenCaptureService : Service() {
     }
 
     private fun runOcr(bitmap: Bitmap) {
-        // 0.5x 다운스케일 — OCR 부하 + GC 압박 1/4로.
-        val scaled = Bitmap.createScaledBitmap(bitmap, bitmap.width / 2, bitmap.height / 2, true)
-        bitmap.recycle()
-
+        // 1x — 작은 채팅 메시지 인식률 우선. 0.5x는 OCR 정확도 크게 손해.
+        val scaled = bitmap
         val input = InputImage.fromBitmap(scaled, 90)
         recognizer.process(input)
             .addOnSuccessListener { result ->
@@ -209,6 +207,8 @@ class ScreenCaptureService : Service() {
                         }
                         sendBroadcast(bi)
                     }
+                    // 학습용 — 텍스트 있는 모든 캡처 저장 (scaled 0.5x, ~150KB)
+                    saveBitmap(scaled)
                 } else {
                     Log.d(TAG, "OCR empty")
                 }
