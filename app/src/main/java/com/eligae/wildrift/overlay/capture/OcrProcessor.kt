@@ -88,8 +88,18 @@ internal class OcrProcessor(
         }
 
         val blockTexts = result.textBlocks.map { it.text }
+        var chatTouched = false
         for (m in ChatParser.parse(blockTexts)) {
             Log.d(TAG, "CHAT MATCH: ${m.champion} → ${m.spell.name}")
+            if (triggerSlotSpell(m, prefs)) chatTouched = true
+        }
+        if (chatTouched) {
+            // 슬롯 prefs 갱신 후 오버레이 view reload broadcast.
+            val bi = Intent(actionLoadingDetected).apply {
+                setPackage(context.packageName)
+                putStringArrayListExtra(extraEnemies, ArrayList())
+            }
+            context.sendBroadcast(bi)
         }
 
         // 픽 화면 시그널 — anchor 저장/적팀 broadcast 모두 skip (모든 챔피언 그리드가 매칭돼서 잡음).
@@ -156,6 +166,33 @@ internal class OcrProcessor(
             prefs.allyAnchorAtMs = System.currentTimeMillis()
             Log.d(TAG, "ALLY ANCHOR SAVED: $canonical")
         }
+    }
+
+    /**
+     * 채팅 매칭으로 슬롯의 spell ready를 갱신. 챔피언명 일치 + spell1/2 중 매칭된 쪽이 ready=null이면
+     * defaultCooldownSec 만큼 카운트 시작. 이미 ready 박혀있으면 무시 (중복 트리거 방지).
+     */
+    private fun triggerSlotSpell(m: ChatParser.Match, prefs: OverlayPrefs): Boolean {
+        for (i in 1..5) {
+            val state = prefs.loadSlot(i)
+            if (state.championName != m.champion) continue
+            val now = System.currentTimeMillis()
+            val cd = m.spell.defaultCooldownSec * 1000L
+            val updated = when {
+                state.spell1 == m.spell && state.spell1ReadyAtEpochMs == null ->
+                    state.copy(spell1ReadyAtEpochMs = now + cd)
+                state.spell2 == m.spell && state.spell2ReadyAtEpochMs == null ->
+                    state.copy(spell2ReadyAtEpochMs = now + cd)
+                else -> null
+            }
+            if (updated != null) {
+                prefs.saveSlot(updated)
+                Log.d(TAG, "AUTO SPELL: slot=$i ${m.champion} ${m.spell.name} cd=${cd / 1000}s")
+                return true
+            }
+            return false
+        }
+        return false
     }
 
     private fun detectEnd(text: String): MatchResult? {
