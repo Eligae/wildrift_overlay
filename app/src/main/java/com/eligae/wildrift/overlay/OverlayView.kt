@@ -111,12 +111,13 @@ class OverlayView(
     }
 
     /**
-     * 배경 색·알파 즉시 갱신. accent=true면 hex teal (슬라이더 조작 중 미리보기).
+     * 배경 색·전체 알파 즉시 갱신. setAlpha는 자식 View(슬롯, 스펠 아이콘, 텍스트)에도 전파되어
+     * spell 자리까지 같은 비율로 투명해진다. accent=true면 hex teal 배경(슬라이더 미리보기).
      */
     fun applyBg(alpha: Float, accent: Boolean) {
-        val a = (alpha * 255).toInt().coerceIn(0, 255)
-        val color = if (accent) Color.argb(a, 0x0A, 0xC8, 0xB9) else Color.argb(a, 0, 0, 0)
+        val color = if (accent) Color.parseColor("#FF0AC8B9") else Color.BLACK
         setBackgroundColor(color)
+        setAlpha(alpha.coerceIn(0.2f, 1f))
     }
 
     companion object {
