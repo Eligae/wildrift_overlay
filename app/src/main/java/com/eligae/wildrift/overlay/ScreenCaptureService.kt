@@ -134,6 +134,11 @@ class ScreenCaptureService : Service() {
         runOcr(bitmap)
     }
 
+    private fun rotate90(src: Bitmap): Bitmap {
+        val m = android.graphics.Matrix().apply { postRotate(90f) }
+        return Bitmap.createBitmap(src, 0, 0, src.width, src.height, m, true)
+    }
+
     private fun imageToBitmap(image: Image): Bitmap {
         val planes = image.planes
         val buffer = planes[0].buffer
@@ -161,14 +166,27 @@ class ScreenCaptureService : Service() {
     }
 
     private fun runOcr(bitmap: Bitmap) {
-        // 1x — 작은 채팅 메시지 인식률 우선. 0.5x는 OCR 정확도 크게 손해.
-        val scaled = bitmap
-        val input = InputImage.fromBitmap(scaled, 90)
+        val prefs = OverlayPrefs(applicationContext)
+        // 사용자 ROI가 있으면 회전 frame에서 잘라 OCR. 아니면 portrait 원본 + rotationDegrees=90.
+        val rotated = if (prefs.hasCustomRoi) rotate90(bitmap).also { bitmap.recycle() } else bitmap
+        val scaled = if (prefs.hasCustomRoi) {
+            val w = rotated.width
+            val h = rotated.height
+            val l = (w * prefs.roiLeft).toInt().coerceIn(0, w - 1)
+            val t = (h * prefs.roiTop).toInt().coerceIn(0, h - 1)
+            val r = (w * prefs.roiRight).toInt().coerceIn(l + 1, w)
+            val b = (h * prefs.roiBottom).toInt().coerceIn(t + 1, h)
+            val cropped = Bitmap.createBitmap(rotated, l, t, r - l, b - t)
+            rotated.recycle()
+            cropped
+        } else rotated
+        val rotationDegrees = if (prefs.hasCustomRoi) 0 else 90
+        val input = InputImage.fromBitmap(scaled, rotationDegrees)
         recognizer.process(input)
             .addOnSuccessListener { result ->
                 val n = result.textBlocks.size
                 if (n > 0) {
-                    Log.d(TAG, "OCR ok: $n blocks, chars=${result.text.length}, frame=${scaled.height}x${scaled.width}(rotated, 0.5x)")
+                    Log.d(TAG, "OCR ok: $n blocks, chars=${result.text.length}, frame=${scaled.width}x${scaled.height}, roi=${prefs.hasCustomRoi}")
                     for (block in result.textBlocks) {
                         val bb = block.boundingBox
                         val bbStr = if (bb != null) "[${bb.left},${bb.top},${bb.right},${bb.bottom}]" else "[null]"
