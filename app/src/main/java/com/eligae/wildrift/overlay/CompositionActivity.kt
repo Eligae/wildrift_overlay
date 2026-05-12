@@ -22,6 +22,7 @@ import androidx.lifecycle.lifecycleScope
 import coil.load
 import com.eligae.wildrift.overlay.api.ApiClient
 import com.eligae.wildrift.overlay.api.ChampionEntry
+import com.eligae.wildrift.overlay.api.ChampionsCache
 import kotlinx.coroutines.launch
 
 class CompositionActivity : AppCompatActivity() {
@@ -40,6 +41,7 @@ class CompositionActivity : AppCompatActivity() {
     private var champions: List<ChampionEntry> = emptyList()
     private val synergyPicks: Array<ChampionEntry?> = arrayOfNulls(4)
     private var counterPick: ChampionEntry? = null
+    private lateinit var cache: ChampionsCache
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,18 +59,27 @@ class CompositionActivity : AppCompatActivity() {
         modeCounter.setOnClickListener { setMode(Mode.COUNTER) }
         btnRun.setOnClickListener { run() }
 
+        cache = ChampionsCache(this)
         setMode(Mode.SYNERGY)
+
+        // 캐시 즉시 표시 (있으면)
+        cache.load()?.let { champions = it.champions }
         loadChampions()
     }
 
     private fun loadChampions() {
-        status.text = getString(R.string.tier_loading)
+        if (champions.isEmpty()) status.text = getString(R.string.tier_loading)
         lifecycleScope.launch {
             try {
-                champions = ApiClient.api.getChampions().champions
+                val resp = ApiClient.api.getChampions()
+                champions = resp.champions
+                cache.save(resp)
                 status.text = ""
             } catch (e: Exception) {
-                status.text = getString(R.string.tier_error, e.message ?: e.javaClass.simpleName)
+                if (champions.isEmpty()) {
+                    status.text = getString(R.string.tier_error, e.message ?: e.javaClass.simpleName)
+                }
+                // 캐시 살아 있으면 그대로 사용
             }
         }
     }
