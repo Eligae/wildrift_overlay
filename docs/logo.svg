@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="256" height="256">
+  <!-- 배경 dark + 가로선 -->
+  <rect width="108" height="108" fill="#0C1117"/>
+  <rect x="0" y="53.5" width="108" height="1" fill="#131A23"/>
+
+  <!-- 외곽 gold 링 -->
+  <path fill="#C89B3C" d="M32,54 a22,22 0 1,0 44,0 a22,22 0 1,0 -44,0 Z"/>
+  <!-- 안쪽 dark -->
+  <path fill="#0C1117" d="M37,54 a17,17 0 1,0 34,0 a17,17 0 1,0 -34,0 Z"/>
+  <!-- hex teal 코어 -->
+  <path fill="#0AC8B9" d="M42,54 a12,12 0 1,0 24,0 a12,12 0 1,0 -24,0 Z"/>
+  <!-- 가운데 dark 점 -->
+  <path fill="#0C1117" d="M48,54 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0 Z"/>
+
+  <!-- 12시 시침 마커 -->
+  <path fill="#C89B3C" d="M53,30 L55,30 L55,38 L53,38 Z"/>
+  <!-- 3시 마커 -->
+  <path fill="#C89B3C" d="M70,53 L78,53 L78,55 L70,55 Z"/>
+</svg>

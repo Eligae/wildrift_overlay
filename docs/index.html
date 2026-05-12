@@ -4,6 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>와일드리프트 스펠체크</title>
+    <link rel="icon" type="image/svg+xml" href="logo.svg" />
+    <meta property="og:title" content="와일드리프트 스펠체크" />
+    <meta property="og:description" content="스펠 쿨다운을 한눈에 — 와일드리프트 오버레이 + 한국어 티어/조합 추천." />
+    <meta property="og:image" content="https://eligae.github.io/wildrift_overlay/logo.svg" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -46,6 +52,14 @@
         border-bottom: 1px solid var(--rule);
         padding-bottom: 40px;
         margin-bottom: 48px;
+      }
+      .logo {
+        width: 80px;
+        height: 80px;
+        display: block;
+        margin-bottom: 24px;
+        border-radius: 18px;
+        box-shadow: 0 0 0 1px var(--rule);
       }
       .badge {
         font-family: var(--mono);
@@ -219,6 +233,7 @@
   <body>
     <main>
       <header>
+        <img src="logo.svg" alt="WR Overlay" class="logo" />
         <div class="badge">Android · 와일드리프트</div>
         <h1>스펠 쿨다운<br /><span class="accent">한눈에</span></h1>
         <p class="tagline">
