@@ -39,3 +39,6 @@ server/.env
 
 # claude
 .claude
+
+# 로컬 테스트 자료 (캡처 PNG 등)
+test/
