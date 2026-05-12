@@ -15,6 +15,7 @@
 - [챔피언 / 라인 매핑](champion-mapping.md)
 - [Android 클라이언트](android-client.md)
 - [티어표 화면](tier-table.md)
+- [Railway 배포](deploy.md)
 - [결정 보류](pending.md)
 
 ## 우선순위
