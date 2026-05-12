@@ -1,4 +1,6 @@
-package com.eligae.wildrift.overlay
+package com.eligae.wildrift.overlay.parse
+
+import com.eligae.wildrift.overlay.model.Spell
 
 object ChatParser {
 

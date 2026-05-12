@@ -1,4 +1,4 @@
-package com.eligae.wildrift.overlay
+package com.eligae.wildrift.overlay.model
 
 data class SlotState(
     val index: Int,

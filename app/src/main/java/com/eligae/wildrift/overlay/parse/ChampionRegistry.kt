@@ -1,4 +1,4 @@
-package com.eligae.wildrift.overlay
+package com.eligae.wildrift.overlay.parse
 
 /**
  * 챔피언 한국명 화이트리스트. ChatParser / LoadingScreenParser 공용.

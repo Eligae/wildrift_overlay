@@ -1,4 +1,4 @@
-package com.eligae.wildrift.overlay
+package com.eligae.wildrift.overlay.parse
 
 /**
  * 와일드리프트 로딩 화면 OCR 결과에서 챔피언 5+5명 추출.

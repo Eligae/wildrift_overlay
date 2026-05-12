@@ -8,6 +8,8 @@ import android.view.Gravity
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.eligae.wildrift.overlay.model.Spell
+import com.eligae.wildrift.overlay.model.SlotState
 
 class SlotView(
     context: Context,

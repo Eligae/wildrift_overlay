@@ -1,6 +1,8 @@
 package com.eligae.wildrift.overlay
 
 import android.content.Context
+import com.eligae.wildrift.overlay.model.Spell
+import com.eligae.wildrift.overlay.model.SlotState
 
 class OverlayPrefs(context: Context) {
     private val prefs = context.applicationContext.getSharedPreferences("overlay_state", Context.MODE_PRIVATE)

@@ -1,4 +1,4 @@
-package com.eligae.wildrift.overlay
+package com.eligae.wildrift.overlay.model
 
 enum class Spell(val label: String, val defaultCooldownSec: Int) {
     FLASH("F", 150),
