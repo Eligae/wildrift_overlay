@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- 외곽 gold 링 -->
+    <path
+        android:fillColor="#C89B3C"
+        android:pathData="M32,54 a22,22 0 1,0 44,0 a22,22 0 1,0 -44,0 Z" />
+
+    <!-- 안쪽 dark -->
+    <path
+        android:fillColor="#0C1117"
+        android:pathData="M37,54 a17,17 0 1,0 34,0 a17,17 0 1,0 -34,0 Z" />
+
+    <!-- hex teal 코어 -->
+    <path
+        android:fillColor="#0AC8B9"
+        android:pathData="M42,54 a12,12 0 1,0 24,0 a12,12 0 1,0 -24,0 Z" />
+
+    <!-- 가운데 dark 점 (도넛) -->
+    <path
+        android:fillColor="#0C1117"
+        android:pathData="M48,54 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0 Z" />
+
+    <!-- 시계 시침 표시 (gold) — 12시 방향 작은 마커 -->
+    <path
+        android:fillColor="#C89B3C"
+        android:pathData="M53,30 L55,30 L55,38 L53,38 Z" />
+
+    <!-- 3시 방향 마커 -->
+    <path
+        android:fillColor="#C89B3C"
+        android:pathData="M70,53 L78,53 L78,55 L70,55 Z" />
+
+</vector>
