@@ -86,6 +86,13 @@ internal class OcrProcessor(
             Log.d(TAG, "CHAT MATCH: ${m.champion} → ${m.spell.name}")
         }
 
+        // 픽 화면 시그널 — anchor 저장/적팀 broadcast 모두 skip (모든 챔피언 그리드가 매칭돼서 잡음).
+        val joined = result.text
+        if (PICK_PHASE_SIGNALS.any { joined.contains(it) }) {
+            Log.d(TAG, "Skip — pick/lobby phase detected")
+            return
+        }
+
         val locs = result.textBlocks.mapNotNull { tb ->
             val box = tb.boundingBox ?: return@mapNotNull null
             LoadingScreenParser.TextLoc(
@@ -155,5 +162,11 @@ internal class OcrProcessor(
 
     companion object {
         private const val TAG = "WRCapture"
+        private val PICK_PHASE_SIGNALS = listOf(
+            "챔피언을 선택하세요",
+            "다른 플레이어를 기다리는 중",
+            "챔피언 변경",
+            "재시작",
+        )
     }
 }

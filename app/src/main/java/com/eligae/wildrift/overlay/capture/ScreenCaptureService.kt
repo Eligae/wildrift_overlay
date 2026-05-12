@@ -74,10 +74,26 @@ class ScreenCaptureService : Service() {
             onDone = { scheduleNext() },
         )
 
+        // 새 캡처 세션 = 새 게임으로 간주 → 이전 슬롯/anchor 초기화 + 오버레이 view reload.
+        resetSessionState()
+
         isRunning = true
         stopRequested = false
         mainHandler.postDelayed({ captureFrame() }, INITIAL_DELAY_MS)
         return START_NOT_STICKY
+    }
+
+    private fun resetSessionState() {
+        val prefs = com.eligae.wildrift.overlay.prefs.OverlayPrefs(applicationContext)
+        for (i in 1..5) prefs.setSlotChampion(i, null)
+        prefs.allyAnchor = emptyList()
+        prefs.allyAnchorAtMs = 0L
+        val bi = Intent(ACTION_LOADING_DETECTED).apply {
+            setPackage(packageName)
+            putStringArrayListExtra(EXTRA_ENEMIES, ArrayList())
+        }
+        sendBroadcast(bi)
+        Log.d(TAG, "Session reset (slots + anchor cleared)")
     }
 
     private fun startInForeground() {
