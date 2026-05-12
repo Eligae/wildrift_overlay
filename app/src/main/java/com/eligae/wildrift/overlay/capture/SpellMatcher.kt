@@ -13,23 +13,33 @@ import com.eligae.wildrift.overlay.model.Spell
 class SpellMatcher(context: Context) {
 
     private val referenceHashes: Map<Spell, Long> = Spell.entries.associateWith { spell ->
-        val drawable = ContextCompat.getDrawable(context, spell.iconRes) as BitmapDrawable
+        val drawable = ContextCompat.getDrawable(context, spell.refIconRes) as BitmapDrawable
         dHash(drawable.bitmap)
     }
 
-    /** crop에서 dHash 계산 후 가장 가까운 reference 반환. distance > threshold면 null. */
-    fun match(crop: Bitmap, threshold: Int = 14): Spell? {
+    /**
+     * crop에서 dHash 계산 후 가장 가까운 reference 반환.
+     * 풀로딩 카드 스펠은 카드별 anti-aliasing 차이로 같은 스펠도 distance 10~22 발생.
+     * threshold 초과 또는 best/2nd 차이가 [marginMin] 미만이면 ambiguous → null.
+     */
+    fun match(crop: Bitmap, threshold: Int = 22, marginMin: Int = 4): Spell? {
         val hash = dHash(crop)
         var best: Spell? = null
         var bestDist = Int.MAX_VALUE
+        var secondDist = Int.MAX_VALUE
         for ((spell, ref) in referenceHashes) {
             val d = hamming(ref, hash)
             if (d < bestDist) {
+                secondDist = bestDist
                 bestDist = d
                 best = spell
+            } else if (d < secondDist) {
+                secondDist = d
             }
         }
-        return if (bestDist <= threshold) best else null
+        if (bestDist > threshold) return null
+        if (secondDist - bestDist < marginMin) return null
+        return best
     }
 
     companion object {

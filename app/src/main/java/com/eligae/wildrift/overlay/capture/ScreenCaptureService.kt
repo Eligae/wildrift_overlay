@@ -196,8 +196,8 @@ class ScreenCaptureService : Service() {
         private const val CHANNEL_ID = "capture_service"
         private const val NOTIFICATION_ID = 2
         private const val NOTIFICATION_ID_VERIFY = 3
-        private const val INITIAL_DELAY_MS = 3_000L
-        private const val INTERVAL_MS = 3_000L
+        private const val INITIAL_DELAY_MS = 1_500L
+        private const val INTERVAL_MS = 1_500L
         const val EXTRA_RESULT_CODE = "resultCode"
         const val EXTRA_DATA = "data"
         const val ACTION_LOADING_DETECTED = "com.eligae.wildrift.overlay.LOADING_DETECTED"
