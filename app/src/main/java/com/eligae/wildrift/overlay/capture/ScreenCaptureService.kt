@@ -86,7 +86,10 @@ class ScreenCaptureService : Service() {
 
     private fun resetSessionState() {
         val prefs = com.eligae.wildrift.overlay.prefs.OverlayPrefs(applicationContext)
-        for (i in 1..5) prefs.setSlotChampion(i, null)
+        for (i in 1..5) {
+            prefs.setSlotChampion(i, null)
+            prefs.setAllySlotChampion(i, null)
+        }
         prefs.allyAnchor = emptyList()
         prefs.allyAnchorAtMs = 0L
         prefs.matchStartedAtMs = 0L

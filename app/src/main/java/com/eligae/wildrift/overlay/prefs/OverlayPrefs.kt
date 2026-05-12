@@ -80,6 +80,15 @@ class OverlayPrefs(context: Context) {
         return allyAnchor.takeIf { it.isNotEmpty() }
     }
 
+    /** 우리 팀 슬롯 5개 — enemy slot과 같은 패턴. 라인 순서 [TOP, JUG, MID, ADC, SUP]. */
+    fun setAllySlotChampion(index: Int, name: String?) {
+        prefs.edit().putString("ally_slot_${index}_champion", name ?: "").apply()
+    }
+
+    fun loadAllySlotChampion(index: Int): String? {
+        return prefs.getString("ally_slot_${index}_champion", "")?.ifBlank { null }
+    }
+
     fun loadSlot(index: Int): SlotState {
         val k = "slot_$index"
         return SlotState(

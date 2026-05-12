@@ -105,7 +105,7 @@ internal class OcrProcessor(
             if (matchResult != null) {
                 val id = System.currentTimeMillis()
                 val enemies = (1..5).map { prefs.loadSlot(it).championName ?: "" }
-                val allies = prefs.allyAnchor.map { it.ifBlank { "" } }
+                val allies = (1..5).map { prefs.loadAllySlotChampion(it) ?: "" }
                 val record = MatchRecord(
                     id = id,
                     startedAtMs = prefs.matchStartedAtMs,
@@ -182,9 +182,11 @@ internal class OcrProcessor(
 
         Log.d(TAG, "LOADING ENEMIES (TOP→SUP): ${teams.enemies}${if (anchorActive) " [anchor]" else ""}")
         Log.d(TAG, "LOADING ALLIES  (TOP→SUP): ${teams.allies}")
-        // 슬롯 5개 라인 순서 — null 슬롯은 비워둠 (OCR 누락 라인).
+        // 슬롯 5개 라인 순서. incoming이 null이면 기존 슬롯 유지 — 한 번 잡힌 챔피언은 덮어쓰지 않음
+        // (이전 캡처에서 5명 잡혔는데 다음 캡처가 4명만 잡으면 슬롯 손실 방지).
         for (i in 0 until 5) {
-            prefs.setSlotChampion(i + 1, teams.enemies.getOrNull(i))
+            teams.enemies.getOrNull(i)?.let { prefs.setSlotChampion(i + 1, it) }
+            teams.allies.getOrNull(i)?.let { prefs.setAllySlotChampion(i + 1, it) }
         }
         // 새 게임 시작 마킹 (종료 감지에 쓰임).
         if (prefs.matchStartedAtMs == 0L || prefs.matchEndDetected) {
