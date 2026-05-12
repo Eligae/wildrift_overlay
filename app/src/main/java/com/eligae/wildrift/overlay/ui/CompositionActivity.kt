@@ -1,4 +1,4 @@
-package com.eligae.wildrift.overlay
+package com.eligae.wildrift.overlay.ui
 
 import android.app.AlertDialog
 import android.graphics.Typeface
@@ -18,6 +18,7 @@ import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.eligae.wildrift.overlay.R
 import androidx.lifecycle.lifecycleScope
 import coil.load
 import com.eligae.wildrift.overlay.api.ApiClient

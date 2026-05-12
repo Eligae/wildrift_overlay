@@ -1,6 +1,7 @@
-package com.eligae.wildrift.overlay
+package com.eligae.wildrift.overlay.update
 
 import android.content.Context
+import com.eligae.wildrift.overlay.BuildConfig
 import com.eligae.wildrift.overlay.api.GitHubRelease
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory

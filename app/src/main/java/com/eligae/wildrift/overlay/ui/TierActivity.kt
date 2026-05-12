@@ -1,4 +1,4 @@
-package com.eligae.wildrift.overlay
+package com.eligae.wildrift.overlay.ui
 
 import android.os.Bundle
 import androidx.core.content.ContextCompat
@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.eligae.wildrift.overlay.R
 import com.eligae.wildrift.overlay.api.ApiClient
 import com.eligae.wildrift.overlay.api.CachePolicy
 import com.eligae.wildrift.overlay.api.NormalizedHero

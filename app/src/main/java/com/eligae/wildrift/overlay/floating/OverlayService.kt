@@ -16,10 +16,10 @@ import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
-import com.eligae.wildrift.overlay.MainActivity
 import com.eligae.wildrift.overlay.R
 import com.eligae.wildrift.overlay.capture.ScreenCaptureService
 import com.eligae.wildrift.overlay.prefs.OverlayPrefs
+import com.eligae.wildrift.overlay.ui.MainActivity
 
 class OverlayService : Service() {
 

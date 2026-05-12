@@ -1,4 +1,4 @@
-package com.eligae.wildrift.overlay
+package com.eligae.wildrift.overlay.ui
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -10,6 +10,7 @@ import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.eligae.wildrift.overlay.R
 import com.eligae.wildrift.overlay.floating.RoiOverlayView
 import com.eligae.wildrift.overlay.prefs.OverlayPrefs
 import java.io.File
