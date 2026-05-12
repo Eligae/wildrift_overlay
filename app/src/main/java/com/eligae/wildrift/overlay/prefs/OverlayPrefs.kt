@@ -1,4 +1,4 @@
-package com.eligae.wildrift.overlay
+package com.eligae.wildrift.overlay.prefs
 
 import android.content.Context
 import com.eligae.wildrift.overlay.model.Spell

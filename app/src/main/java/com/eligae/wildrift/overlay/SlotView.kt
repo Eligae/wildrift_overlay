@@ -10,6 +10,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import com.eligae.wildrift.overlay.model.Spell
 import com.eligae.wildrift.overlay.model.SlotState
+import com.eligae.wildrift.overlay.prefs.OverlayPrefs
 
 class SlotView(
     context: Context,

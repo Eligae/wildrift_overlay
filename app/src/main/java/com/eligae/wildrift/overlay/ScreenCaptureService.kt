@@ -22,6 +22,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.eligae.wildrift.overlay.parse.ChatParser
 import com.eligae.wildrift.overlay.parse.LoadingScreenParser
+import com.eligae.wildrift.overlay.prefs.OverlayPrefs
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions

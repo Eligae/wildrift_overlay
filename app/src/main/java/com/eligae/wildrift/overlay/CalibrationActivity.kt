@@ -10,6 +10,7 @@ import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.eligae.wildrift.overlay.prefs.OverlayPrefs
 import java.io.File
 
 /**

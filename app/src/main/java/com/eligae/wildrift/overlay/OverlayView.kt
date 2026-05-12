@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewConfiguration
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.eligae.wildrift.overlay.prefs.OverlayPrefs
 import kotlin.math.abs
 
 class OverlayView(

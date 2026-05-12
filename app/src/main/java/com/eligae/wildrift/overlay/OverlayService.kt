@@ -16,6 +16,7 @@ import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
+import com.eligae.wildrift.overlay.prefs.OverlayPrefs
 
 class OverlayService : Service() {
 

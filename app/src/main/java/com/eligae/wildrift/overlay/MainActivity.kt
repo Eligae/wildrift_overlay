@@ -17,6 +17,7 @@ import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.eligae.wildrift.overlay.prefs.OverlayPrefs
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
