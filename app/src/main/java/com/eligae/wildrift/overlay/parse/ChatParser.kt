@@ -35,7 +35,7 @@ object ChatParser {
             val pre = text.substring(0, spellIdx)
             val champ = allNames
                 .mapNotNull { name ->
-                    val idx = pre.lastIndexOf(name)
+                    val idx = KoreanFuzzy.fuzzyLastIndexOf(pre, name)
                     if (idx >= 0) name to idx else null
                 }
                 .maxByOrNull { it.second }

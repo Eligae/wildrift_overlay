@@ -71,12 +71,12 @@ object LoadingScreenParser {
 
     private fun extractPicks(blocks: List<TextLoc>, extra: Set<String>): List<Pick> {
         val picks = mutableListOf<Pick>()
-        val allNames: Sequence<String> = (ChampionRegistry.KNOWN_NAMES.asSequence() + extra.asSequence()).distinct()
+        val allNames: List<String> = (ChampionRegistry.KNOWN_NAMES + extra).distinct().toList()
         for (b in blocks) {
             val text = b.text.replace("\n", " ")
             for (name in allNames) {
                 if (name.isBlank()) continue
-                if (text.contains(name)) {
+                if (KoreanFuzzy.fuzzyContains(text, name)) {
                     val canon = ChampionRegistry.canonical(name)
                     if (picks.none { it.canonical == canon }) {
                         picks.add(Pick(canon, b.centerX, b.centerY))
@@ -91,12 +91,12 @@ object LoadingScreenParser {
     /** 좌표 정보 없는 단순 추출 (fallback). */
     fun parse(blocks: List<String>, extraKnownNames: Set<String> = emptySet()): List<String> {
         val found = mutableListOf<String>()
-        val allNames: Sequence<String> = (ChampionRegistry.KNOWN_NAMES.asSequence() + extraKnownNames.asSequence()).distinct()
+        val allNames: List<String> = (ChampionRegistry.KNOWN_NAMES + extraKnownNames).distinct().toList()
         for (raw in blocks) {
             val text = raw.replace("\n", " ")
             for (name in allNames) {
                 if (name.isBlank()) continue
-                if (text.contains(name)) {
+                if (KoreanFuzzy.fuzzyContains(text, name)) {
                     val canon = ChampionRegistry.canonical(name)
                     if (!found.contains(canon)) found.add(canon)
                 }
