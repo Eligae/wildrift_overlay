@@ -23,6 +23,11 @@ class ChampionsCache(context: Context) {
         }
     }
 
+    /** 한국명으로 avatar URL 조회. 캐시 미스 또는 매칭 실패 시 null. */
+    fun avatarFor(krName: String): String? {
+        return load()?.champions?.firstOrNull { it.krName == krName }?.avatar
+    }
+
     companion object {
         private const val NAME = "champions_cache"
         private const val KEY = "champions"

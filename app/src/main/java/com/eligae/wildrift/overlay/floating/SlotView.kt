@@ -6,8 +6,12 @@ import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
 import android.view.View
+import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import coil.load
+import com.eligae.wildrift.overlay.api.ChampionsCache
 import com.eligae.wildrift.overlay.model.Spell
 import com.eligae.wildrift.overlay.model.SlotState
 import com.eligae.wildrift.overlay.prefs.OverlayPrefs
@@ -20,10 +24,12 @@ class SlotView(
 
     private var state = prefs.loadSlot(slotIndex)
     private val laneLabel: TextView
+    private val championIcon: ImageView
     private val spell1Button: TextView
     private val spell2Button: TextView
     private val handler = Handler(Looper.getMainLooper())
     private val scale = prefs.scale
+    private val championsCache = ChampionsCache(context.applicationContext)
 
     private val tick = object : Runnable {
         override fun run() {
@@ -39,13 +45,29 @@ class SlotView(
             topMargin = dp(1)
         }
 
+        val labelContainer = FrameLayout(context).apply {
+            layoutParams = LayoutParams(dp(34), LayoutParams.MATCH_PARENT)
+        }
         laneLabel = TextView(context).apply {
             setTextColor(Color.WHITE)
             gravity = Gravity.CENTER
-            layoutParams = LayoutParams(dp(34), LayoutParams.MATCH_PARENT)
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT,
+            )
         }
+        championIcon = ImageView(context).apply {
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            visibility = View.GONE
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT,
+            )
+        }
+        labelContainer.addView(laneLabel)
+        labelContainer.addView(championIcon)
         applyLabel()
-        addView(laneLabel)
+        addView(labelContainer)
 
         spell1Button = button().also { addView(it) }
         spell2Button = button().also { addView(it) }
@@ -78,11 +100,23 @@ class SlotView(
     private fun applyLabel() {
         val champ = state.championName
         if (champ != null) {
+            val avatar = championsCache.avatarFor(champ)
+            if (avatar != null) {
+                championIcon.load(avatar) { crossfade(true) }
+                championIcon.visibility = View.VISIBLE
+                laneLabel.visibility = View.GONE
+                return
+            }
+            // 캐시 미스/매핑 실패 — 텍스트 fallback
             laneLabel.text = champ
             laneLabel.textSize = 8f * scale
+            laneLabel.visibility = View.VISIBLE
+            championIcon.visibility = View.GONE
         } else {
             laneLabel.text = LANE_LABELS.getOrElse(slotIndex - 1) { "?" }
             laneLabel.textSize = 9f * scale
+            laneLabel.visibility = View.VISIBLE
+            championIcon.visibility = View.GONE
         }
     }
 
