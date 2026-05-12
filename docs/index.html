@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>와일드리프트 스펠체크</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,900&family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0C1117;
+    --bg-elev: #131A23;
+    --ink: #E8E3D6;
+    --ink-soft: #A8A194;
+    --ink-dim: #6B6557;
+    --gold: #C89B3C;
+    --gold-soft: #F0E6D2;
+    --hex: #0AC8B9;
+    --rule: #2A3340;
+    --serif: 'Fraunces', serif;
+    --kr: 'Noto Sans KR', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--kr); line-height: 1.7; }
+  main { max-width: 760px; margin: 0 auto; padding: 80px 24px 120px; }
+
+  header { border-bottom: 1px solid var(--rule); padding-bottom: 40px; margin-bottom: 48px; }
+  .badge { font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em; color: var(--ink-dim); text-transform: uppercase; margin-bottom: 24px; }
+  h1 { font-family: var(--serif); font-weight: 900; font-size: clamp(40px, 7vw, 64px); line-height: 1; color: var(--gold-soft); letter-spacing: -0.025em; margin-bottom: 16px; }
+  h1 .accent { font-style: italic; font-weight: 300; color: var(--gold); }
+  .tagline { font-size: 17px; color: var(--ink-soft); max-width: 540px; }
+
+  .download { margin: 36px 0; }
+  .btn { display: inline-block; padding: 14px 28px; background: var(--bg-elev); border: 1px solid var(--gold); color: var(--gold-soft); font-family: var(--serif); font-size: 16px; text-decoration: none; transition: all 0.15s; }
+  .btn:hover { background: var(--gold); color: var(--bg); }
+  .btn-sub { color: var(--ink-dim); font-size: 12px; margin-left: 12px; font-family: var(--mono); }
+
+  section { margin-bottom: 64px; }
+  h2 { font-family: var(--serif); font-weight: 500; font-size: 28px; color: var(--gold-soft); border-bottom: 1px solid var(--rule); padding-bottom: 12px; margin-bottom: 24px; letter-spacing: -0.015em; }
+  .section-num { font-family: var(--mono); font-size: 11px; letter-spacing: 0.25em; color: var(--gold); display: block; margin-bottom: 8px; }
+
+  ul.features { list-style: none; }
+  ul.features li { padding-left: 22px; position: relative; margin-bottom: 12px; }
+  ul.features li::before { content: '◆'; position: absolute; left: 0; top: 2px; color: var(--hex); font-size: 11px; }
+  ul.features strong { color: var(--gold-soft); font-weight: 700; }
+
+  .step { display: grid; grid-template-columns: 48px 1fr; gap: 16px; padding: 16px 0; border-bottom: 1px dashed var(--rule); }
+  .step:last-child { border-bottom: none; }
+  .step-num { font-family: var(--serif); font-style: italic; font-weight: 300; font-size: 36px; color: var(--gold); line-height: 1; }
+  .step h4 { font-family: var(--serif); font-weight: 700; font-size: 16px; color: var(--gold-soft); margin-bottom: 4px; }
+  .step p { font-size: 14px; color: var(--ink-soft); margin: 0; }
+
+  .faq-q { font-family: var(--serif); font-weight: 700; font-size: 17px; color: var(--gold-soft); margin-top: 24px; margin-bottom: 6px; }
+  .faq-a { font-size: 14px; color: var(--ink-soft); }
+
+  .screenshot-placeholder { background: var(--bg-elev); border: 1px dashed var(--rule); padding: 80px 20px; text-align: center; font-family: var(--mono); font-size: 12px; color: var(--ink-dim); border-radius: 4px; }
+
+  footer { margin-top: 80px; padding-top: 32px; border-top: 1px solid var(--rule); font-family: var(--mono); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-dim); display: flex; justify-content: space-between; }
+  footer a { color: var(--hex); text-decoration: none; }
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <div class="badge">Android · 와일드리프트</div>
+  <h1>스펠 쿨다운<br><span class="accent">한눈에</span></h1>
+  <p class="tagline">와일드리프트 인게임 중 적 챔피언의 스펠과 궁극기 쿨다운을 화면 위 오버레이로 추적. 한국어 티어표까지 한 앱에서.</p>
+
+  <div class="download">
+    <a class="btn" href="#" id="download-link">APK 다운로드</a>
+    <span class="btn-sub">v0.1.0 · 최신 Release</span>
+  </div>
+</header>
+
+<section>
+  <span class="section-num">§ 01</span>
+  <h2>주요 기능</h2>
+  <ul class="features">
+    <li><strong>인게임 오버레이</strong> — 적 5명 슬롯, 스펠 2개 (점멸/점화 등). 탭 한 번으로 쿨다운 시작.</li>
+    <li><strong>3단계 토글</strong> — 손잡이 단일 탭으로 전체 / 라인 라벨 숨김 / 완전 접힘 순환.</li>
+    <li><strong>크기 슬라이더</strong> — 0.5x ~ 1.5x. 폰/사용자 시야에 맞춰 조정.</li>
+    <li><strong>한국어 티어표</strong> — 라인별 추천 카드 + 전체 표. lolm.qq.com 데이터 한국어화.</li>
+    <li><strong>자동 채팅 감지 (개발 중)</strong> — 적이 스펠 쓰면 채팅 메시지를 OCR로 잡아 자동 카운트다운.</li>
+  </ul>
+</section>
+
+<section>
+  <span class="section-num">§ 02</span>
+  <h2>사용법</h2>
+  <div class="step"><div class="step-num">1</div><div><h4>설치</h4><p>APK 다운로드 후 폰에서 "출처 미상의 앱" 허용. Play Store 미배포.</p></div></div>
+  <div class="step"><div class="step-num">2</div><div><h4>권한 부여</h4><p>앱에서 "오버레이 권한 부여" → 시스템 설정에서 다른 앱 위에 표시 ON.</p></div></div>
+  <div class="step"><div class="step-num">3</div><div><h4>오버레이 시작</h4><p>"오버레이 시작" 버튼 → 좌상단에 슬롯 5개 표시. 손잡이 드래그로 위치 조정.</p></div></div>
+  <div class="step"><div class="step-num">4</div><div><h4>인게임</h4><p>와일드리프트 실행 → 적 스펠 본 순간 해당 슬롯 탭. 카운트다운 시작.</p></div></div>
+</section>
+
+<section>
+  <span class="section-num">§ 03</span>
+  <h2>안전성 (FAQ)</h2>
+  <div class="faq-q">메모리 후킹이나 패킷 스니핑을 합니까?</div>
+  <div class="faq-a">아니요. 게임 상태는 100% 사용자 수동 입력 기반. 메모리/패킷에 손대지 않습니다.</div>
+  <div class="faq-q">안티치트(Vanguard)에 안전한가요?</div>
+  <div class="faq-a">단순 "화면 위 그림판" 수준의 오버레이라 안전합니다. 게임 프로세스에 접근하지 않습니다.</div>
+  <div class="faq-q">왜 Play Store에 없나요?</div>
+  <div class="faq-a">`SYSTEM_ALERT_WINDOW` 권한 정책상 심사가 까다로워 GitHub Releases로 직배포합니다. 추후 검토.</div>
+  <div class="faq-q">자동 채팅 감지는 어떻게 동작하나요?</div>
+  <div class="faq-a">기본 OFF. 사용자가 토글로 켜면 채팅 영역만 OCR로 분석합니다. 다른 영역·메모리·네트워크엔 접근하지 않습니다.</div>
+</section>
+
+<footer>
+  <span>v0.1.0 · MIT</span>
+  <span><a href="https://github.com/" target="_blank">GitHub</a></span>
+</footer>
+
+</main>
+</body>
+</html>
