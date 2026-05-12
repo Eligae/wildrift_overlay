@@ -1,4 +1,4 @@
-package com.eligae.wildrift.overlay
+package com.eligae.wildrift.overlay.floating
 
 import android.content.Context
 import android.graphics.Color

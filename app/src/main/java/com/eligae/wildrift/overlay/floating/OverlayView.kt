@@ -1,4 +1,4 @@
-package com.eligae.wildrift.overlay
+package com.eligae.wildrift.overlay.floating
 
 import android.annotation.SuppressLint
 import android.content.Context

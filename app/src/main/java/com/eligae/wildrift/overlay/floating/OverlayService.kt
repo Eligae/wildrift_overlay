@@ -1,4 +1,4 @@
-package com.eligae.wildrift.overlay
+package com.eligae.wildrift.overlay.floating
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -16,6 +16,9 @@ import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
+import com.eligae.wildrift.overlay.MainActivity
+import com.eligae.wildrift.overlay.R
+import com.eligae.wildrift.overlay.ScreenCaptureService
 import com.eligae.wildrift.overlay.prefs.OverlayPrefs
 
 class OverlayService : Service() {

@@ -38,7 +38,7 @@
             android:exported="false" />
 
         <service
-            android:name=".OverlayService"
+            android:name=".floating.OverlayService"
             android:exported="false"
             android:foregroundServiceType="specialUse">
             <property
