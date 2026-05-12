@@ -99,8 +99,11 @@ class OverlayService : Service() {
                 prefs.overlayY = overlayParams.y
             },
         )
-        val flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+        var flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
             WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+        if (prefs.passThrough) {
+            flags = flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+        }
         overlayParams = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,

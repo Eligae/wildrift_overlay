@@ -14,6 +14,7 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.TextView
+import androidx.appcompat.widget.SwitchCompat
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -39,6 +40,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnComposition: Button
     private lateinit var btnCalibration: Button
     private lateinit var btnMatchHistory: Button
+    private lateinit var swPassThrough: SwitchCompat
     private lateinit var updateBanner: LinearLayout
     private lateinit var updateBannerText: TextView
     private lateinit var updateBannerOpen: TextView
@@ -74,6 +76,15 @@ class MainActivity : AppCompatActivity() {
         btnComposition = findViewById(R.id.btn_composition)
         btnCalibration = findViewById(R.id.btn_calibration)
         btnMatchHistory = findViewById(R.id.btn_match_history)
+        swPassThrough = findViewById(R.id.sw_pass_through)
+        swPassThrough.isChecked = prefs.passThrough
+        swPassThrough.setOnCheckedChangeListener { _, checked ->
+            prefs.passThrough = checked
+            if (OverlayService.isRunning) {
+                OverlayService.stop(this)
+                swPassThrough.postDelayed({ OverlayService.start(this) }, 300)
+            }
+        }
         updateBanner = findViewById(R.id.update_banner)
         updateBannerText = findViewById(R.id.update_banner_text)
         updateBannerOpen = findViewById(R.id.update_banner_open)

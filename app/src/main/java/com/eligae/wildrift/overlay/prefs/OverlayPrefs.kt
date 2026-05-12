@@ -29,6 +29,14 @@ class OverlayPrefs(context: Context) {
         set(value) = prefs.edit().putFloat("bg_alpha", value.coerceIn(0.2f, 1.0f)).apply()
 
     /**
+     * 터치 통과 — true면 오버레이가 모든 터치를 게임에 pass-through (FLAG_NOT_TOUCHABLE).
+     * 단점: 스펠 클릭/drag도 안 됨. 종료 후 잠깐 활성에 적합.
+     */
+    var passThrough: Boolean
+        get() = prefs.getBoolean("pass_through", false)
+        set(value) = prefs.edit().putBoolean("pass_through", value).apply()
+
+    /**
      * OCR ROI 비율 (회전된 frame 기준 0~1).
      * 기본 (0,0,1,1) = 전체 화면. 사용자 캘리브레이션 시 좁혀짐.
      */
