@@ -36,6 +36,7 @@ class MainActivity : AppCompatActivity() {
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK && result.data != null) {
             ScreenCaptureService.start(this, result.resultCode, result.data!!)
+            btnCapture.postDelayed({ refreshCaptureButton() }, 600)
         }
     }
 
@@ -55,7 +56,7 @@ class MainActivity : AppCompatActivity() {
 
         btnGrant.setOnClickListener { requestOverlayPermission() }
         btnStart.setOnClickListener { toggleOverlay() }
-        btnCapture.setOnClickListener { requestCapture() }
+        btnCapture.setOnClickListener { toggleCapture() }
         btnTier.setOnClickListener { startActivity(Intent(this, TierActivity::class.java)) }
         btnComposition.setOnClickListener { startActivity(Intent(this, CompositionActivity::class.java)) }
 
@@ -85,6 +86,22 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         refreshPermissionUi()
         refreshStartButton()
+        refreshCaptureButton()
+    }
+
+    private fun refreshCaptureButton() {
+        btnCapture.setText(
+            if (ScreenCaptureService.isRunning) R.string.capture_stop else R.string.capture_test
+        )
+    }
+
+    private fun toggleCapture() {
+        if (ScreenCaptureService.isRunning) {
+            ScreenCaptureService.stop(this)
+            btnCapture.postDelayed({ refreshCaptureButton() }, 300)
+        } else {
+            requestCapture()
+        }
     }
 
     private fun refreshPermissionUi() {

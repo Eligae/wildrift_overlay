@@ -31,6 +31,7 @@ class ScreenCaptureService : Service() {
     private var virtualDisplay: VirtualDisplay? = null
     private var imageReader: ImageReader? = null
     private val mainHandler = Handler(Looper.getMainLooper())
+    @Volatile private var stopRequested = false
 
     private val recognizer by lazy {
         TextRecognition.getClient(KoreanTextRecognizerOptions.Builder().build())
@@ -65,7 +66,10 @@ class ScreenCaptureService : Service() {
         }
         mediaProjection?.registerCallback(projectionCallback, mainHandler)
         setupCapture()
-        mainHandler.postDelayed({ captureFrame() }, CAPTURE_DELAY_MS)
+
+        isRunning = true
+        stopRequested = false
+        mainHandler.postDelayed({ captureFrame() }, INITIAL_DELAY_MS)
         return START_NOT_STICKY
     }
 
@@ -111,10 +115,10 @@ class ScreenCaptureService : Service() {
     }
 
     private fun captureFrame() {
+        if (stopRequested) return
         val reader = imageReader ?: return
         val image = reader.acquireLatestImage()
         if (image == null) {
-            Log.w(TAG, "No image available, retry in 500ms")
             mainHandler.postDelayed({ captureFrame() }, 500)
             return
         }
@@ -123,11 +127,10 @@ class ScreenCaptureService : Service() {
         } catch (t: Throwable) {
             Log.e(TAG, "Bitmap convert failed", t)
             image.close()
-            finishWith()
+            scheduleNext()
             return
         }
         image.close()
-        saveBitmap(bitmap)
         runOcr(bitmap)
     }
 
@@ -150,77 +153,82 @@ class ScreenCaptureService : Service() {
         try {
             val dir = getExternalFilesDir(null)
             val file = File(dir, "capture_${System.currentTimeMillis()}.png")
-            file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 90, it) }
-            Log.d(TAG, "Saved: ${file.absolutePath} (${bitmap.width}x${bitmap.height})")
+            file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 80, it) }
+            Log.d(TAG, "Saved: ${file.name} (${bitmap.width}x${bitmap.height})")
         } catch (t: Throwable) {
             Log.e(TAG, "Save failed", t)
         }
     }
 
     private fun runOcr(bitmap: Bitmap) {
-        // 게임 콘텐츠가 가로 → portrait 캡처라 90도 회전 메타.
-        val input = InputImage.fromBitmap(bitmap, 90)
+        // 0.5x 다운스케일 — OCR 부하 + GC 압박 1/4로.
+        val scaled = Bitmap.createScaledBitmap(bitmap, bitmap.width / 2, bitmap.height / 2, true)
+        bitmap.recycle()
+
+        val input = InputImage.fromBitmap(scaled, 90)
         recognizer.process(input)
             .addOnSuccessListener { result ->
-                Log.d(TAG, "OCR ok: ${result.textBlocks.size} blocks, chars=${result.text.length}")
-                val blockTexts = result.textBlocks.map { it.text }
-                for (block in blockTexts) {
-                    Log.d(TAG, "BLOCK: ${block.replace("\n", " | ")}")
-                }
-                val chatMatches = ChatParser.parse(blockTexts)
-                if (chatMatches.isEmpty()) {
-                    Log.d(TAG, "CHAT MATCH: none")
-                } else {
+                val n = result.textBlocks.size
+                if (n > 0) {
+                    Log.d(TAG, "OCR ok: $n blocks, chars=${result.text.length}, frame=${scaled.height}x${scaled.width}(rotated, 0.5x)")
+                    for (block in result.textBlocks) {
+                        val bb = block.boundingBox
+                        val bbStr = if (bb != null) "[${bb.left},${bb.top},${bb.right},${bb.bottom}]" else "[null]"
+                        Log.d(TAG, "BLOCK $bbStr ${block.text.replace("\n", " | ")}")
+                    }
+
+                    val blockTexts = result.textBlocks.map { it.text }
+                    val chatMatches = ChatParser.parse(blockTexts)
                     for (m in chatMatches) {
                         Log.d(TAG, "CHAT MATCH: ${m.champion} → ${m.spell.name}")
                     }
-                }
 
-                // 로딩 화면 분석 — 좌표 기반 적팀/아군 분리.
-                val locs = result.textBlocks.mapNotNull { tb ->
-                    val box = tb.boundingBox ?: return@mapNotNull null
-                    LoadingScreenParser.TextLoc(
-                        tb.text,
-                        (box.left + box.right) / 2f,
-                        (box.top + box.bottom) / 2f,
-                    )
+                    val locs = result.textBlocks.mapNotNull { tb ->
+                        val box = tb.boundingBox ?: return@mapNotNull null
+                        LoadingScreenParser.TextLoc(
+                            tb.text,
+                            (box.left + box.right) / 2f,
+                            (box.top + box.bottom) / 2f,
+                        )
+                    }
+                    val rotatedFrameHeight = scaled.width
+                    val teams = LoadingScreenParser.parseTeams(locs, rotatedFrameHeight)
+                    if (teams.enemies.isNotEmpty()) {
+                        Log.d(TAG, "LOADING ENEMIES (TOP→SUP): ${teams.enemies}")
+                        Log.d(TAG, "LOADING ALLIES  (TOP→SUP): ${teams.allies}")
+                        val overlayPrefs = OverlayPrefs(applicationContext)
+                        teams.enemies.forEachIndexed { i, name ->
+                            if (i + 1 <= 5) overlayPrefs.setSlotChampion(i + 1, name)
+                        }
+                        for (i in (teams.enemies.size + 1)..5) {
+                            overlayPrefs.setSlotChampion(i, null)
+                        }
+                        val bi = Intent(ACTION_LOADING_DETECTED).apply {
+                            setPackage(packageName)
+                            putStringArrayListExtra(EXTRA_ENEMIES, ArrayList(teams.enemies))
+                        }
+                        sendBroadcast(bi)
+                    }
+                } else {
+                    Log.d(TAG, "OCR empty")
                 }
-                // rotationDegrees=90 → ML Kit 좌표는 회전 frame 기준.
-                // 원본 bitmap.width = 회전된 frame height.
-                val rotatedFrameHeight = bitmap.width
-                val teams = LoadingScreenParser.parseTeams(locs, rotatedFrameHeight)
-                if (teams.enemies.isNotEmpty()) {
-                    Log.d(TAG, "LOADING ENEMIES (TOP→SUP): ${teams.enemies}")
-                    Log.d(TAG, "LOADING ALLIES  (TOP→SUP): ${teams.allies}")
-
-                    val overlayPrefs = OverlayPrefs(applicationContext)
-                    teams.enemies.forEachIndexed { i, name ->
-                        if (i + 1 <= 5) overlayPrefs.setSlotChampion(i + 1, name)
-                    }
-                    // 슬롯 비어 있으면 명시적으로 비움
-                    for (i in (teams.enemies.size + 1)..5) {
-                        overlayPrefs.setSlotChampion(i, null)
-                    }
-
-                    val intent = Intent(ACTION_LOADING_DETECTED).apply {
-                        setPackage(packageName)
-                        putStringArrayListExtra(EXTRA_ENEMIES, ArrayList(teams.enemies))
-                    }
-                    sendBroadcast(intent)
-                }
-                bitmap.recycle()
-                finishWith()
+                scaled.recycle()
+                scheduleNext()
             }
             .addOnFailureListener { e ->
                 Log.e(TAG, "OCR failed", e)
-                bitmap.recycle()
-                finishWith()
+                scaled.recycle()
+                scheduleNext()
             }
     }
 
-    private fun finishWith() {
-        cleanup()
-        stopSelf()
+    private fun scheduleNext() {
+        if (stopRequested) {
+            cleanup()
+            stopSelf()
+            return
+        }
+        mainHandler.postDelayed({ captureFrame() }, INTERVAL_MS)
     }
 
     private fun cleanup() {
@@ -231,6 +239,7 @@ class ScreenCaptureService : Service() {
         try { mediaProjection?.unregisterCallback(projectionCallback) } catch (_: Throwable) {}
         try { mediaProjection?.stop() } catch (_: Throwable) {}
         mediaProjection = null
+        isRunning = false
     }
 
     private fun createChannel() {
@@ -244,6 +253,7 @@ class ScreenCaptureService : Service() {
     }
 
     override fun onDestroy() {
+        stopRequested = true
         cleanup()
         super.onDestroy()
     }
@@ -254,11 +264,16 @@ class ScreenCaptureService : Service() {
         private const val TAG = "WRCapture"
         private const val CHANNEL_ID = "capture_service"
         private const val NOTIFICATION_ID = 2
-        private const val CAPTURE_DELAY_MS = 5000L
+        private const val INITIAL_DELAY_MS = 3_000L
+        private const val INTERVAL_MS = 10_000L
         const val EXTRA_RESULT_CODE = "resultCode"
         const val EXTRA_DATA = "data"
         const val ACTION_LOADING_DETECTED = "com.eligae.wildrift.overlay.LOADING_DETECTED"
         const val EXTRA_ENEMIES = "enemies"
+
+        @Volatile
+        var isRunning = false
+            private set
 
         fun start(context: Context, resultCode: Int, data: Intent) {
             val intent = Intent(context, ScreenCaptureService::class.java).apply {
@@ -266,6 +281,10 @@ class ScreenCaptureService : Service() {
                 putExtra(EXTRA_DATA, data)
             }
             context.startForegroundService(intent)
+        }
+
+        fun stop(context: Context) {
+            context.stopService(Intent(context, ScreenCaptureService::class.java))
         }
     }
 }
