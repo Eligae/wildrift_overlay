@@ -11,7 +11,7 @@ import android.widget.TextView
 
 class SlotView(
     context: Context,
-    slotIndex: Int,
+    val slotIndex: Int,
     private val prefs: OverlayPrefs,
 ) : LinearLayout(context) {
 
@@ -37,12 +37,11 @@ class SlotView(
         }
 
         laneLabel = TextView(context).apply {
-            text = LANE_LABELS.getOrElse(slotIndex - 1) { "?" }
             setTextColor(Color.WHITE)
-            textSize = 9f * scale
             gravity = Gravity.CENTER
-            layoutParams = LayoutParams(dp(22), LayoutParams.MATCH_PARENT)
+            layoutParams = LayoutParams(dp(34), LayoutParams.MATCH_PARENT)
         }
+        applyLabel()
         addView(laneLabel)
 
         spell1Button = button().also { addView(it) }
@@ -64,6 +63,24 @@ class SlotView(
 
     fun setLaneLabelVisible(visible: Boolean) {
         laneLabel.visibility = if (visible) View.VISIBLE else View.GONE
+    }
+
+    /** prefs 갱신 후 호출 (broadcast 받았을 때). */
+    fun reload() {
+        state = prefs.loadSlot(slotIndex)
+        applyLabel()
+        render()
+    }
+
+    private fun applyLabel() {
+        val champ = state.championName
+        if (champ != null) {
+            laneLabel.text = champ
+            laneLabel.textSize = 8f * scale
+        } else {
+            laneLabel.text = LANE_LABELS.getOrElse(slotIndex - 1) { "?" }
+            laneLabel.textSize = 9f * scale
+        }
     }
 
     private fun dp(v: Int): Int = (v * scale * resources.displayMetrics.density).toInt()

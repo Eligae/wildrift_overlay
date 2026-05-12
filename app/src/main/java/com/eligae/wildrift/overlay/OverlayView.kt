@@ -103,6 +103,13 @@ class OverlayView(
         }
     }
 
+    /** broadcast 받았을 때 슬롯 전체 다시 load. */
+    fun reloadAll() {
+        for (i in 0 until slotsContainer.childCount) {
+            (slotsContainer.getChildAt(i) as? SlotView)?.reload()
+        }
+    }
+
     companion object {
         private val HANDLE_LABELS = arrayOf("−", "≡", "+")
     }

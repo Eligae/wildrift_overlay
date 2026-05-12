@@ -2,6 +2,7 @@ package com.eligae.wildrift.overlay
 
 data class SlotState(
     val index: Int,
+    val championName: String? = null,
     val spell1: Spell = Spell.FLASH,
     val spell2: Spell = Spell.IGNITE,
     val spell1ReadyAtEpochMs: Long? = null,

@@ -5,9 +5,12 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.PixelFormat
+import android.os.Build
 import android.os.IBinder
 import android.view.Gravity
 import android.view.View
@@ -23,12 +26,26 @@ class OverlayService : Service() {
     private var dragStartX = 0
     private var dragStartY = 0
 
+    private val loadingReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            (overlayView as? OverlayView)?.reloadAll()
+        }
+    }
+
     override fun onCreate() {
         super.onCreate()
         isRunning = true
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
         prefs = OverlayPrefs(this)
         createNotificationChannel()
+
+        val filter = IntentFilter(ScreenCaptureService.ACTION_LOADING_DETECTED)
+        if (Build.VERSION.SDK_INT >= 33) {
+            registerReceiver(loadingReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            @Suppress("UnspecifiedRegisterReceiverFlag")
+            registerReceiver(loadingReceiver, filter)
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -38,6 +55,7 @@ class OverlayService : Service() {
     }
 
     override fun onDestroy() {
+        try { unregisterReceiver(loadingReceiver) } catch (_: Throwable) {}
         hideOverlay()
         isRunning = false
         super.onDestroy()

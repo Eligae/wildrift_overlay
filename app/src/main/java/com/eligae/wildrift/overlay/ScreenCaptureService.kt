@@ -175,9 +175,38 @@ class ScreenCaptureService : Service() {
                         Log.d(TAG, "CHAT MATCH: ${m.champion} → ${m.spell.name}")
                     }
                 }
-                val loadingPicks = LoadingScreenParser.parse(blockTexts)
-                if (loadingPicks.isNotEmpty()) {
-                    Log.d(TAG, "LOADING: ${loadingPicks.joinToString(", ")}")
+
+                // 로딩 화면 분석 — 좌표 기반 적팀/아군 분리.
+                val locs = result.textBlocks.mapNotNull { tb ->
+                    val box = tb.boundingBox ?: return@mapNotNull null
+                    LoadingScreenParser.TextLoc(
+                        tb.text,
+                        (box.left + box.right) / 2f,
+                        (box.top + box.bottom) / 2f,
+                    )
+                }
+                // rotationDegrees=90 → ML Kit 좌표는 회전 frame 기준.
+                // 원본 bitmap.width = 회전된 frame height.
+                val rotatedFrameHeight = bitmap.width
+                val teams = LoadingScreenParser.parseTeams(locs, rotatedFrameHeight)
+                if (teams.enemies.isNotEmpty()) {
+                    Log.d(TAG, "LOADING ENEMIES (TOP→SUP): ${teams.enemies}")
+                    Log.d(TAG, "LOADING ALLIES  (TOP→SUP): ${teams.allies}")
+
+                    val overlayPrefs = OverlayPrefs(applicationContext)
+                    teams.enemies.forEachIndexed { i, name ->
+                        if (i + 1 <= 5) overlayPrefs.setSlotChampion(i + 1, name)
+                    }
+                    // 슬롯 비어 있으면 명시적으로 비움
+                    for (i in (teams.enemies.size + 1)..5) {
+                        overlayPrefs.setSlotChampion(i, null)
+                    }
+
+                    val intent = Intent(ACTION_LOADING_DETECTED).apply {
+                        setPackage(packageName)
+                        putStringArrayListExtra(EXTRA_ENEMIES, ArrayList(teams.enemies))
+                    }
+                    sendBroadcast(intent)
                 }
                 bitmap.recycle()
                 finishWith()
@@ -228,6 +257,8 @@ class ScreenCaptureService : Service() {
         private const val CAPTURE_DELAY_MS = 5000L
         const val EXTRA_RESULT_CODE = "resultCode"
         const val EXTRA_DATA = "data"
+        const val ACTION_LOADING_DETECTED = "com.eligae.wildrift.overlay.LOADING_DETECTED"
+        const val EXTRA_ENEMIES = "enemies"
 
         fun start(context: Context, resultCode: Int, data: Intent) {
             val intent = Intent(context, ScreenCaptureService::class.java).apply {
