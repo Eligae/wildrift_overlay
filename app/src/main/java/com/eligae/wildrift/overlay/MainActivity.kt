@@ -27,6 +27,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnStart: Button
     private lateinit var seekScale: SeekBar
     private lateinit var scaleValue: TextView
+    private lateinit var seekAlpha: SeekBar
+    private lateinit var alphaValue: TextView
     private lateinit var btnCapture: Button
     private lateinit var btnTier: Button
     private lateinit var btnComposition: Button
@@ -58,6 +60,8 @@ class MainActivity : AppCompatActivity() {
         btnStart = findViewById(R.id.btn_start)
         seekScale = findViewById(R.id.seek_scale)
         scaleValue = findViewById(R.id.scale_value)
+        seekAlpha = findViewById(R.id.seek_alpha)
+        alphaValue = findViewById(R.id.alpha_value)
         btnCapture = findViewById(R.id.btn_capture)
         btnTier = findViewById(R.id.btn_tier)
         btnComposition = findViewById(R.id.btn_composition)
@@ -83,10 +87,23 @@ class MainActivity : AppCompatActivity() {
                 val newScale = progressToScale(sb?.progress ?: 5)
                 if (newScale != prefs.scale) {
                     prefs.scale = newScale
-                    if (OverlayService.isRunning) {
-                        OverlayService.stop(this@MainActivity)
-                        sb?.postDelayed({ OverlayService.start(this@MainActivity) }, 300)
-                    }
+                    restartOverlayIfRunning()
+                }
+            }
+        })
+
+        seekAlpha.progress = ((prefs.bgAlpha - ALPHA_MIN) / ALPHA_STEP).toInt().coerceIn(0, 8)
+        alphaValue.text = formatPercent(prefs.bgAlpha)
+        seekAlpha.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
+                alphaValue.text = formatPercent(progressToAlpha(progress))
+            }
+            override fun onStartTrackingTouch(sb: SeekBar?) {}
+            override fun onStopTrackingTouch(sb: SeekBar?) {
+                val newAlpha = progressToAlpha(sb?.progress ?: 6)
+                if (newAlpha != prefs.bgAlpha) {
+                    prefs.bgAlpha = newAlpha
+                    restartOverlayIfRunning()
                 }
             }
         })
@@ -182,10 +199,23 @@ class MainActivity : AppCompatActivity() {
 
     private fun progressToScale(progress: Int): Float = SCALE_MIN + progress * SCALE_STEP
 
+    private fun progressToAlpha(progress: Int): Float = ALPHA_MIN + progress * ALPHA_STEP
+
     private fun formatScale(scale: Float): String = "%.1fx".format(scale)
+
+    private fun formatPercent(v: Float): String = "%d%%".format((v * 100).toInt())
+
+    private fun restartOverlayIfRunning() {
+        if (OverlayService.isRunning) {
+            OverlayService.stop(this)
+            seekScale.postDelayed({ OverlayService.start(this) }, 300)
+        }
+    }
 
     companion object {
         private const val SCALE_MIN = 0.5f
         private const val SCALE_STEP = 0.1f
+        private const val ALPHA_MIN = 0.2f
+        private const val ALPHA_STEP = 0.1f
     }
 }

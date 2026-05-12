@@ -21,6 +21,11 @@ class OverlayPrefs(context: Context) {
         get() = prefs.getFloat("scale", 1.0f)
         set(value) = prefs.edit().putFloat("scale", value.coerceIn(0.5f, 1.5f)).apply()
 
+    /** 오버레이 배경 알파 (0.2 = 매우 투명 ~ 1.0 = 불투명 검정). 기본 0.8. */
+    var bgAlpha: Float
+        get() = prefs.getFloat("bg_alpha", 0.8f)
+        set(value) = prefs.edit().putFloat("bg_alpha", value.coerceIn(0.2f, 1.0f)).apply()
+
     fun loadSlot(index: Int): SlotState {
         val k = "slot_$index"
         return SlotState(

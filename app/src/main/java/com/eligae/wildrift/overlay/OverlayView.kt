@@ -26,7 +26,8 @@ class OverlayView(
 
     init {
         orientation = HORIZONTAL
-        setBackgroundColor(Color.parseColor("#CC000000"))
+        val alpha = (prefs.bgAlpha * 255).toInt().coerceIn(0, 255)
+        setBackgroundColor(Color.argb(alpha, 0, 0, 0))
         setPadding(dp(3), dp(3), dp(3), dp(3))
 
         handleView = TextView(context).apply {

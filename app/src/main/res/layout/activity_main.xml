@@ -126,6 +126,38 @@
 
         </LinearLayout>
 
+        <TextView
+            style="@style/LolTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/alpha_label"
+            android:textSize="16sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="8dp">
+
+            <SeekBar
+                android:id="@+id/seek_alpha"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="8" />
+
+            <TextView
+                android:id="@+id/alpha_value"
+                android:layout_width="56dp"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:textColor="@color/lol_ink"
+                android:textSize="14sp" />
+
+        </LinearLayout>
+
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
