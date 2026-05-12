@@ -1,6 +1,7 @@
 import tags from "../data/champion-tags.json" with { type: "json" };
 import counters from "../data/counter-matrix.json" with { type: "json" };
 import krMap from "../data/champion-kr.json" with { type: "json" };
+import type { TencentHero } from "./fetcher/tencent.js";
 
 interface ChampionTags {
   class: string;
@@ -22,10 +23,14 @@ const KR_MAP: Record<string, string> = krMap as Record<string, string>;
 export interface SynergySuggestion {
   heroId: string;
   krName?: string;
+  avatar?: string;
   reasons: string[];
 }
 
-export function suggestSynergy(teamHeroIds: string[]): SynergySuggestion[] {
+export function suggestSynergy(
+  teamHeroIds: string[],
+  heroes: Record<string, TencentHero>,
+): SynergySuggestion[] {
   const teamTags = teamHeroIds.map((id) => ALL_TAGS[id]).filter((t): t is ChampionTags => !!t);
 
   const hasTank = teamTags.some((t) => t.class === "tank" || t.class === "fighter");
@@ -58,7 +63,12 @@ export function suggestSynergy(teamHeroIds: string[]): SynergySuggestion[] {
       if (needs.engage && t.roles.includes("engage")) reasons.push("이니시에이터가 없습니다");
       if (needs.needAP && t.damage === "AP") reasons.push("AP 데미지가 부족합니다");
       if (needs.needAD && t.damage === "AD") reasons.push("AD 데미지가 부족합니다");
-      return { heroId: id, krName: KR_MAP[id], reasons };
+      return {
+        heroId: id,
+        krName: KR_MAP[id],
+        avatar: heroes[id]?.avatar,
+        reasons,
+      };
     })
     .filter((c) => c.reasons.length > 0)
     .sort((a, b) => b.reasons.length - a.reasons.length)
@@ -68,18 +78,24 @@ export function suggestSynergy(teamHeroIds: string[]): SynergySuggestion[] {
 export interface CounterSuggestion {
   enemyHeroId: string;
   enemyKrName?: string;
-  counters: Array<{ heroId: string; krName?: string }>;
+  enemyAvatar?: string;
+  counters: Array<{ heroId: string; krName?: string; avatar?: string }>;
   note?: string;
 }
 
-export function suggestCounter(enemyHeroId: string): CounterSuggestion {
+export function suggestCounter(
+  enemyHeroId: string,
+  heroes: Record<string, TencentHero>,
+): CounterSuggestion {
   const entry = COUNTERS[enemyHeroId];
   return {
     enemyHeroId,
     enemyKrName: KR_MAP[enemyHeroId],
+    enemyAvatar: heroes[enemyHeroId]?.avatar,
     counters: (entry?.counters ?? []).map((id) => ({
       heroId: id,
       krName: KR_MAP[id],
+      avatar: heroes[id]?.avatar,
     })),
     note: entry?.note,
   };

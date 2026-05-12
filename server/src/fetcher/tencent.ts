@@ -80,11 +80,12 @@ export async function fetchHeroList(): Promise<Record<string, TencentHero>> {
 
 export async function buildTierTable(
   krMap: Record<string, string>,
+  heroList?: Record<string, TencentHero>,
   mode: string = "0",
 ): Promise<TierTable> {
-  const [tierResp, heroList] = await Promise.all([
+  const [tierResp, heroes] = await Promise.all([
     fetchTierData(),
-    fetchHeroList(),
+    heroList ? Promise.resolve(heroList) : fetchHeroList(),
   ]);
   const modeData = tierResp.data[mode];
   if (!modeData) throw new Error(`unknown mode: ${mode}`);
@@ -93,7 +94,7 @@ export async function buildTierTable(
   for (const [pos, laneKey] of Object.entries(POSITION_TO_LANE)) {
     const rows = modeData[pos] ?? [];
     const normalized: NormalizedHero[] = rows.map((row) => {
-      const hero = heroList[row.hero_id];
+      const hero = heroes[row.hero_id];
       return {
         heroId: row.hero_id,
         cnName: hero?.name ?? "?",

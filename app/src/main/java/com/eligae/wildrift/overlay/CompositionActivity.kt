@@ -1,15 +1,19 @@
 package com.eligae.wildrift.overlay
 
 import android.app.AlertDialog
+import android.graphics.Typeface
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
+import android.view.ViewOutlineProvider
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import coil.load
 import com.eligae.wildrift.overlay.api.ApiClient
 import com.eligae.wildrift.overlay.api.ChampionEntry
 import kotlinx.coroutines.launch
@@ -133,7 +137,9 @@ class CompositionActivity : AppCompatActivity() {
                     val resp = ApiClient.api.getSynergy(team.joinToString(","))
                     status.text = "${resp.suggestions.size}명 추천"
                     resp.suggestions.forEach { s ->
-                        resultContainer.addView(buildResultRow(s.krName ?: s.heroId, s.reasons.joinToString(" · ")))
+                        resultContainer.addView(
+                            buildResultRow(s.krName ?: s.heroId, s.reasons.joinToString(" · "), s.avatar)
+                        )
                     }
                 } catch (e: Exception) {
                     status.text = "오류: ${e.message}"
@@ -150,10 +156,10 @@ class CompositionActivity : AppCompatActivity() {
                     val resp = ApiClient.api.getCounter(enemy.heroId)
                     status.text = resp.note ?: ""
                     if (resp.counters.isEmpty()) {
-                        resultContainer.addView(buildResultRow("(데이터 없음)", ""))
+                        resultContainer.addView(buildResultRow("(데이터 없음)", "", null))
                     }
                     resp.counters.forEach { c ->
-                        resultContainer.addView(buildResultRow(c.krName ?: c.heroId, ""))
+                        resultContainer.addView(buildResultRow(c.krName ?: c.heroId, "", c.avatar))
                     }
                 } catch (e: Exception) {
                     status.text = "오류: ${e.message}"
@@ -162,35 +168,57 @@ class CompositionActivity : AppCompatActivity() {
         }
     }
 
-    private fun buildResultRow(title: String, subtitle: String): View {
-        val container = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            val pad = (12 * resources.displayMetrics.density).toInt()
+    private fun buildResultRow(title: String, subtitle: String, avatarUrl: String?): View {
+        val density = resources.displayMetrics.density
+        val pad = (12 * density).toInt()
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
             setPadding(pad, pad, pad, pad)
             setBackgroundResource(R.drawable.bg_tier_row)
+        }
+        val avatar = ImageView(this).apply {
+            val size = (48 * density).toInt()
+            layoutParams = LinearLayout.LayoutParams(size, size)
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            background = ContextCompat.getDrawable(this@CompositionActivity, R.drawable.bg_avatar)
+            clipToOutline = true
+            outlineProvider = ViewOutlineProvider.BACKGROUND
+        }
+        if (!avatarUrl.isNullOrBlank()) {
+            avatar.load(avatarUrl) { crossfade(true) }
+        }
+        row.addView(avatar)
+
+        val textCol = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            val lp = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            lp.marginStart = (12 * density).toInt()
+            layoutParams = lp
         }
         val name = TextView(this).apply {
             text = title
             setTextColor(ContextCompat.getColor(this@CompositionActivity, R.color.lol_gold_soft))
             textSize = 16f
-            typeface = android.graphics.Typeface.SERIF
-            gravity = Gravity.START
+            typeface = Typeface.SERIF
         }
-        container.addView(name)
+        textCol.addView(name)
         if (subtitle.isNotBlank()) {
             val sub = TextView(this).apply {
                 text = subtitle
                 setTextColor(ContextCompat.getColor(this@CompositionActivity, R.color.lol_ink_soft))
                 textSize = 12f
             }
-            container.addView(sub)
+            textCol.addView(sub)
         }
+        row.addView(textCol)
+
         val lp = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.WRAP_CONTENT,
         )
-        lp.topMargin = (6 * resources.displayMetrics.density).toInt()
-        container.layoutParams = lp
-        return container
+        lp.topMargin = (6 * density).toInt()
+        row.layoutParams = lp
+        return row
     }
 }

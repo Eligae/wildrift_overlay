@@ -33,6 +33,7 @@ data class LanesResponse(
 data class ChampionEntry(
     val heroId: String,
     val krName: String,
+    val avatar: String?,
 )
 
 data class ChampionsResponse(
@@ -42,6 +43,7 @@ data class ChampionsResponse(
 data class SynergySuggestion(
     val heroId: String,
     val krName: String?,
+    val avatar: String?,
     val reasons: List<String>,
 )
 
@@ -53,11 +55,13 @@ data class SynergyResponse(
 data class CounterRef(
     val heroId: String,
     val krName: String?,
+    val avatar: String?,
 )
 
 data class CounterResponse(
     val enemyHeroId: String,
     val enemyKrName: String?,
+    val enemyAvatar: String?,
     val counters: List<CounterRef>,
     val note: String?,
 )
