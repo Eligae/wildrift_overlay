@@ -12,6 +12,50 @@
         android:orientation="vertical"
         android:padding="24dp">
 
+        <LinearLayout
+            android:id="@+id/update_banner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="12dp"
+            android:background="@color/lol_bg_elev"
+            android:layout_marginBottom="12dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/update_banner_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@color/lol_gold_soft"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/update_banner_open"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:text="@string/update_open"
+                android:textColor="@color/lol_hex"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/update_banner_close"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:text="×"
+                android:textColor="@color/lol_ink_dim"
+                android:textSize="18sp"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
+
         <TextView
             style="@style/LolTitle"
             android:layout_width="match_parent"

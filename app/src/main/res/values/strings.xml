@@ -30,4 +30,6 @@
     <string name="comp_counter_hint">상대할 적 챔피언을 선택하면 카운터 후보를 보여줍니다.</string>
     <string name="comp_run">분석</string>
     <string name="open_composition">조합 보기</string>
+    <string name="update_available">새 버전 %1$s 사용 가능</string>
+    <string name="update_open">보기</string>
 </resources>

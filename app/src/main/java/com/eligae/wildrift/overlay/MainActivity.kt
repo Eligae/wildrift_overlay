@@ -9,11 +9,15 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.view.View
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
@@ -26,6 +30,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnCapture: Button
     private lateinit var btnTier: Button
     private lateinit var btnComposition: Button
+    private lateinit var updateBanner: LinearLayout
+    private lateinit var updateBannerText: TextView
+    private lateinit var updateBannerOpen: TextView
+    private lateinit var updateBannerClose: TextView
 
     private val notifPermLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -53,6 +61,10 @@ class MainActivity : AppCompatActivity() {
         btnCapture = findViewById(R.id.btn_capture)
         btnTier = findViewById(R.id.btn_tier)
         btnComposition = findViewById(R.id.btn_composition)
+        updateBanner = findViewById(R.id.update_banner)
+        updateBannerText = findViewById(R.id.update_banner_text)
+        updateBannerOpen = findViewById(R.id.update_banner_open)
+        updateBannerClose = findViewById(R.id.update_banner_close)
 
         btnGrant.setOnClickListener { requestOverlayPermission() }
         btnStart.setOnClickListener { toggleOverlay() }
@@ -80,6 +92,22 @@ class MainActivity : AppCompatActivity() {
         })
 
         requestNotificationPermissionIfNeeded()
+        checkUpdate()
+    }
+
+    private fun checkUpdate() {
+        lifecycleScope.launch {
+            val result = VersionCheck.check(this@MainActivity) ?: return@launch
+            updateBannerText.text = getString(R.string.update_available, result.newTag)
+            updateBannerOpen.setOnClickListener {
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(result.pageUrl)))
+            }
+            updateBannerClose.setOnClickListener {
+                updateBanner.visibility = View.GONE
+                VersionCheck.dismiss(this@MainActivity, result.newTag)
+            }
+            updateBanner.visibility = View.VISIBLE
+        }
     }
 
     override fun onResume() {
