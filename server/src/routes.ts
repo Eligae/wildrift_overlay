@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { getCache, refresh } from "./cache.js";
 import { LANE_ORDER, LaneKey } from "./fetcher/tencent.js";
+import { suggestSynergy, suggestCounter } from "./composition.js";
 
 export const router = Router();
 
@@ -28,6 +29,27 @@ router.get("/tier", (req, res) => {
     fetchedAt: cache.fetchedAt,
     lanes: cache.lanes,
   });
+});
+
+router.get("/composition/synergy", (req, res) => {
+  const team = String(req.query.team ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (team.length === 0) {
+    res.status(400).json({ error: "team query required (comma-separated heroIds)" });
+    return;
+  }
+  res.json({ team, suggestions: suggestSynergy(team) });
+});
+
+router.get("/composition/counter", (req, res) => {
+  const enemy = String(req.query.enemy ?? "").trim();
+  if (!enemy) {
+    res.status(400).json({ error: "enemy query required" });
+    return;
+  }
+  res.json(suggestCounter(enemy));
 });
 
 router.post("/refresh", async (_req, res) => {
