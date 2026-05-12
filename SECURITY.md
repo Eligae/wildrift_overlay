@@ -4,7 +4,7 @@
 
 보안 취약점을 발견하면 **공개 issue로 올리지 말고** 아래 이메일로 비공개로 알려주세요.
 
-- 연락처: dumbteam2025@gmail.com
+- 연락처: <superriaco@gmail.com>
 - 제목: `[security] wr_spellcheck`
 
 수신 후 48시간 이내 1차 응답을 목표로 합니다. 패치는 영향도에 따라 합리적인 기간 안에 배포합니다.
