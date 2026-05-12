@@ -6,12 +6,6 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
-import android.graphics.Bitmap
-import android.graphics.PixelFormat
-import android.hardware.display.DisplayManager
-import android.hardware.display.VirtualDisplay
-import android.media.Image
-import android.media.ImageReader
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.Build
@@ -21,24 +15,24 @@ import android.os.Looper
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.eligae.wildrift.overlay.R
-import com.eligae.wildrift.overlay.parse.ChatParser
-import com.eligae.wildrift.overlay.parse.LoadingScreenParser
-import com.eligae.wildrift.overlay.prefs.OverlayPrefs
-import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.text.TextRecognition
-import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions
-import java.io.File
 
+/**
+ * 캡처 서비스 — 외부 lifecycle (MediaProjection 권한, foreground 알림, 캡처 주기).
+ * 캡처 인프라는 [CaptureSession], OCR/매칭/broadcast는 [OcrProcessor]가 담당.
+ */
 class ScreenCaptureService : Service() {
 
-    private var mediaProjection: MediaProjection? = null
-    private var virtualDisplay: VirtualDisplay? = null
-    private var imageReader: ImageReader? = null
+    private var session: CaptureSession? = null
+    private var ocr: OcrProcessor? = null
+    private var projection: MediaProjection? = null
     private val mainHandler = Handler(Looper.getMainLooper())
     @Volatile private var stopRequested = false
 
-    private val recognizer by lazy {
-        TextRecognition.getClient(KoreanTextRecognizerOptions.Builder().build())
+    private val projectionCallback = object : MediaProjection.Callback() {
+        override fun onStop() {
+            super.onStop()
+            cleanup()
+        }
     }
 
     override fun onCreate() {
@@ -62,26 +56,28 @@ class ScreenCaptureService : Service() {
         startInForeground()
 
         val mpm = getSystemService(MediaProjectionManager::class.java)
-        mediaProjection = mpm.getMediaProjection(resultCode, data)
-        if (mediaProjection == null) {
+        projection = mpm.getMediaProjection(resultCode, data)
+        val proj = projection
+        if (proj == null) {
             Log.e(TAG, "MediaProjection null")
             stopSelf()
             return START_NOT_STICKY
         }
-        mediaProjection?.registerCallback(projectionCallback, mainHandler)
-        setupCapture()
+        session = CaptureSession(this, proj).apply {
+            registerCallback(projectionCallback, mainHandler)
+            start()
+        }
+        ocr = OcrProcessor(
+            context = this,
+            actionLoadingDetected = ACTION_LOADING_DETECTED,
+            extraEnemies = EXTRA_ENEMIES,
+            onDone = { scheduleNext() },
+        )
 
         isRunning = true
         stopRequested = false
         mainHandler.postDelayed({ captureFrame() }, INITIAL_DELAY_MS)
         return START_NOT_STICKY
-    }
-
-    private val projectionCallback = object : MediaProjection.Callback() {
-        override fun onStop() {
-            super.onStop()
-            cleanup()
-        }
     }
 
     private fun startInForeground() {
@@ -94,174 +90,21 @@ class ScreenCaptureService : Service() {
         if (Build.VERSION.SDK_INT >= 34) {
             startForeground(
                 NOTIFICATION_ID, notif,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION,
             )
         } else {
             startForeground(NOTIFICATION_ID, notif)
         }
     }
 
-    private fun setupCapture() {
-        val metrics = resources.displayMetrics
-        val width = metrics.widthPixels
-        val height = metrics.heightPixels
-        val density = metrics.densityDpi
-        Log.d(TAG, "Display ${width}x${height} dpi=$density")
-
-        imageReader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 2)
-        virtualDisplay = mediaProjection?.createVirtualDisplay(
-            "WRCapture",
-            width, height, density,
-            DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-            imageReader?.surface,
-            null, null,
-        )
-    }
-
     private fun captureFrame() {
         if (stopRequested) return
-        val reader = imageReader ?: return
-        val image = reader.acquireLatestImage()
-        if (image == null) {
+        val bitmap = session?.acquireBitmap()
+        if (bitmap == null) {
             mainHandler.postDelayed({ captureFrame() }, 500)
             return
         }
-        val bitmap = try {
-            imageToBitmap(image)
-        } catch (t: Throwable) {
-            Log.e(TAG, "Bitmap convert failed", t)
-            image.close()
-            scheduleNext()
-            return
-        }
-        image.close()
-        runOcr(bitmap)
-    }
-
-    private fun rotate90(src: Bitmap): Bitmap {
-        val m = android.graphics.Matrix().apply { postRotate(90f) }
-        return Bitmap.createBitmap(src, 0, 0, src.width, src.height, m, true)
-    }
-
-    private fun imageToBitmap(image: Image): Bitmap {
-        val planes = image.planes
-        val buffer = planes[0].buffer
-        val pixelStride = planes[0].pixelStride
-        val rowStride = planes[0].rowStride
-        val rowPadding = rowStride - pixelStride * image.width
-        val bitmap = Bitmap.createBitmap(
-            image.width + rowPadding / pixelStride,
-            image.height,
-            Bitmap.Config.ARGB_8888,
-        )
-        bitmap.copyPixelsFromBuffer(buffer)
-        return bitmap
-    }
-
-    private fun saveBitmap(bitmap: Bitmap) {
-        try {
-            val dir = getExternalFilesDir(null)
-            val file = File(dir, "capture_${System.currentTimeMillis()}.png")
-            file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 80, it) }
-            Log.d(TAG, "Saved: ${file.name} (${bitmap.width}x${bitmap.height})")
-        } catch (t: Throwable) {
-            Log.e(TAG, "Save failed", t)
-        }
-    }
-
-    private fun runOcr(bitmap: Bitmap) {
-        val prefs = OverlayPrefs(applicationContext)
-        // 사용자 ROI가 있으면 회전 frame에서 잘라 OCR. 아니면 portrait 원본 + rotationDegrees=90.
-        val rotated = if (prefs.hasCustomRoi) rotate90(bitmap).also { bitmap.recycle() } else bitmap
-        val scaled = if (prefs.hasCustomRoi) {
-            val w = rotated.width
-            val h = rotated.height
-            val l = (w * prefs.roiLeft).toInt().coerceIn(0, w - 1)
-            val t = (h * prefs.roiTop).toInt().coerceIn(0, h - 1)
-            val r = (w * prefs.roiRight).toInt().coerceIn(l + 1, w)
-            val b = (h * prefs.roiBottom).toInt().coerceIn(t + 1, h)
-            val cropped = Bitmap.createBitmap(rotated, l, t, r - l, b - t)
-            rotated.recycle()
-            cropped
-        } else rotated
-        val rotationDegrees = if (prefs.hasCustomRoi) 0 else 90
-        val input = InputImage.fromBitmap(scaled, rotationDegrees)
-        recognizer.process(input)
-            .addOnSuccessListener { result ->
-                val n = result.textBlocks.size
-                if (n > 0) {
-                    Log.d(TAG, "OCR ok: $n blocks, chars=${result.text.length}, frame=${scaled.width}x${scaled.height}, roi=${prefs.hasCustomRoi}")
-                    for (block in result.textBlocks) {
-                        val bb = block.boundingBox
-                        val bbStr = if (bb != null) "[${bb.left},${bb.top},${bb.right},${bb.bottom}]" else "[null]"
-                        Log.d(TAG, "BLOCK $bbStr ${block.text.replace("\n", " | ")}")
-                    }
-
-                    val blockTexts = result.textBlocks.map { it.text }
-                    val chatMatches = ChatParser.parse(blockTexts)
-                    for (m in chatMatches) {
-                        Log.d(TAG, "CHAT MATCH: ${m.champion} → ${m.spell.name}")
-                    }
-
-                    val locs = result.textBlocks.mapNotNull { tb ->
-                        val box = tb.boundingBox ?: return@mapNotNull null
-                        LoadingScreenParser.TextLoc(
-                            tb.text,
-                            (box.left + box.right) / 2f,
-                            (box.top + box.bottom) / 2f,
-                        )
-                    }
-                    val rotatedFrameHeight = scaled.width
-                    val overlayPrefs = OverlayPrefs(applicationContext)
-                    val anchor = overlayPrefs.freshAllyAnchor()
-                    val teams = LoadingScreenParser.parseTeams(locs, rotatedFrameHeight, anchor)
-
-                    // 5명 화면 anchor 저장 — picks가 정확히 5명이고 anchor 미보유 또는 다른 5명일 때.
-                    // (인게임에서 5명 동시 매칭은 거의 안 일어남)
-                    if (teams.picks.size == 5) {
-                        val canonical = teams.picks.map { it.canonical }
-                        if (canonical.toSet() != overlayPrefs.allyAnchor.toSet()) {
-                            overlayPrefs.allyAnchor = canonical
-                            overlayPrefs.allyAnchorAtMs = System.currentTimeMillis()
-                            Log.d(TAG, "ALLY ANCHOR SAVED: $canonical")
-                        }
-                    }
-
-                    // anchor 있으면 enemies 3명 이상이면 broadcast (10명 중 일부 OCR 누락 허용).
-                    // anchor 없으면 fallback — 적+동 합 6명 이상 + 적 3명 이상.
-                    val passBroadcast = if (anchor != null) {
-                        teams.enemies.size >= 3
-                    } else {
-                        teams.enemies.size + teams.allies.size >= 6 && teams.enemies.size >= 3
-                    }
-                    if (passBroadcast) {
-                        Log.d(TAG, "LOADING ENEMIES (TOP→SUP): ${teams.enemies}${if (anchor != null) " [anchor]" else ""}")
-                        Log.d(TAG, "LOADING ALLIES  (TOP→SUP): ${teams.allies}")
-                        teams.enemies.forEachIndexed { i, name ->
-                            if (i + 1 <= 5) overlayPrefs.setSlotChampion(i + 1, name)
-                        }
-                        for (i in (teams.enemies.size + 1)..5) {
-                            overlayPrefs.setSlotChampion(i, null)
-                        }
-                        val bi = Intent(ACTION_LOADING_DETECTED).apply {
-                            setPackage(packageName)
-                            putStringArrayListExtra(EXTRA_ENEMIES, ArrayList(teams.enemies))
-                        }
-                        sendBroadcast(bi)
-                    }
-                    // 학습용 — 텍스트 있는 모든 캡처 저장 (scaled 0.5x, ~150KB)
-                    saveBitmap(scaled)
-                } else {
-                    Log.d(TAG, "OCR empty")
-                }
-                scaled.recycle()
-                scheduleNext()
-            }
-            .addOnFailureListener { e ->
-                Log.e(TAG, "OCR failed", e)
-                scaled.recycle()
-                scheduleNext()
-            }
+        ocr?.process(bitmap)
     }
 
     private fun scheduleNext() {
@@ -274,13 +117,11 @@ class ScreenCaptureService : Service() {
     }
 
     private fun cleanup() {
-        try { virtualDisplay?.release() } catch (_: Throwable) {}
-        virtualDisplay = null
-        try { imageReader?.close() } catch (_: Throwable) {}
-        imageReader = null
-        try { mediaProjection?.unregisterCallback(projectionCallback) } catch (_: Throwable) {}
-        try { mediaProjection?.stop() } catch (_: Throwable) {}
-        mediaProjection = null
+        session?.release(projectionCallback)
+        session = null
+        projection = null
+        ocr?.close()
+        ocr = null
         isRunning = false
     }
 
@@ -289,7 +130,7 @@ class ScreenCaptureService : Service() {
         val channel = NotificationChannel(
             CHANNEL_ID,
             getString(R.string.capture_notification_title),
-            NotificationManager.IMPORTANCE_LOW
+            NotificationManager.IMPORTANCE_LOW,
         ).apply { setShowBadge(false) }
         nm.createNotificationChannel(channel)
     }
