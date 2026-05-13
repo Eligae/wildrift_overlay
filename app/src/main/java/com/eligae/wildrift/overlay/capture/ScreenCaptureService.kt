@@ -15,6 +15,11 @@ import android.os.Looper
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.eligae.wildrift.overlay.R
+import com.eligae.wildrift.overlay.audio.AudioCaptureSession
+import com.eligae.wildrift.overlay.audio.AudioSessionHolder
+import com.eligae.wildrift.overlay.audio.SoundDetector
+import com.eligae.wildrift.overlay.audio.SoundLearnReceiver
+import android.content.IntentFilter
 
 /**
  * 캡처 서비스 — 외부 lifecycle (MediaProjection 권한, foreground 알림, 캡처 주기).
@@ -25,6 +30,9 @@ class ScreenCaptureService : Service() {
     private var session: CaptureSession? = null
     private var ocr: OcrProcessor? = null
     private var projection: MediaProjection? = null
+    private var audio: AudioCaptureSession? = null
+    private var soundDetector: SoundDetector? = null
+    private val learnReceiver = SoundLearnReceiver()
     private val mainHandler = Handler(Looper.getMainLooper())
     @Volatile private var stopRequested = false
 
@@ -79,8 +87,30 @@ class ScreenCaptureService : Service() {
         resetSessionState()
 
         isRunning = true
+        instance = this
         stopRequested = false
         mainHandler.postDelayed({ captureFrame() }, INITIAL_DELAY_MS)
+        // 오디오 캡처 — 사운드 트리거(학습/검출)에서 ring buffer 사용.
+        audio = AudioCaptureSession(applicationContext, proj).also {
+            val ok = it.start()
+            Log.d(TAG, "AudioCaptureSession started=$ok")
+        }
+        AudioSessionHolder.session = audio
+        val a = audio
+        if (a != null && a.isRunning()) {
+            soundDetector = SoundDetector(
+                applicationContext, a,
+                onMatchEnded = { matchId -> notifyMatchEnded(matchId) },
+            ).also { it.start(); AudioSessionHolder.detector = it }
+            // ADB broadcast 기반 학습 트리거 등록 — 외부 컨트롤 가능.
+            val filter = IntentFilter(SoundLearnReceiver.ACTION)
+            if (Build.VERSION.SDK_INT >= 33) {
+                registerReceiver(learnReceiver, filter, Context.RECEIVER_EXPORTED)
+            } else {
+                @Suppress("UnspecifiedRegisterReceiverFlag")
+                registerReceiver(learnReceiver, filter)
+            }
+        }
         return START_NOT_STICKY
     }
 
@@ -99,7 +129,22 @@ class ScreenCaptureService : Service() {
             putStringArrayListExtra(EXTRA_ENEMIES, ArrayList())
         }
         sendBroadcast(bi)
+        cleanupOldCaptures()
         Log.d(TAG, "Session reset (slots + anchor + match cleared)")
+    }
+
+    /** 이전 세션에서 누적된 타임스탬프 capture PNG들 일괄 삭제. capture_latest.png는 유지. */
+    private fun cleanupOldCaptures() {
+        try {
+            val dir = getExternalFilesDir(null) ?: return
+            val pattern = Regex("""^capture_\d+\.png$""")
+            val deleted = dir.listFiles { _, name -> pattern.matches(name) }
+                ?.also { it.forEach { f -> f.delete() } }
+                ?.size ?: 0
+            if (deleted > 0) Log.d(TAG, "Cleaned up $deleted old capture PNG(s)")
+        } catch (t: Throwable) {
+            Log.e(TAG, "cleanupOldCaptures failed", t)
+        }
     }
 
     /**
@@ -155,6 +200,15 @@ class ScreenCaptureService : Service() {
         ocr?.process(bitmap)
     }
 
+    /**
+     * 외부(SoundDetector 등)에서 호출 — 다음 정규 캡처 대기 안 하고 즉시 1회.
+     * 이미 캡처가 진행 중이면 다음 onDone에서 자연스럽게 처리.
+     */
+    fun triggerImmediateCapture() {
+        if (stopRequested) return
+        mainHandler.post { captureFrame() }
+    }
+
     private fun scheduleNext() {
         if (stopRequested) {
             cleanup()
@@ -165,6 +219,14 @@ class ScreenCaptureService : Service() {
     }
 
     private fun cleanup() {
+        try { unregisterReceiver(learnReceiver) } catch (_: Throwable) {}
+        soundDetector?.stop()
+        soundDetector = null
+        AudioSessionHolder.detector = null
+        instance = null
+        audio?.stop()
+        audio = null
+        AudioSessionHolder.session = null
         session?.release(projectionCallback)
         session = null
         projection = null
@@ -205,6 +267,11 @@ class ScreenCaptureService : Service() {
 
         @Volatile
         var isRunning = false
+            private set
+
+        /** SoundDetector가 CHAT_PING 검출 시 호출. */
+        @Volatile
+        var instance: ScreenCaptureService? = null
             private set
 
         fun start(context: Context, resultCode: Int, data: Intent) {

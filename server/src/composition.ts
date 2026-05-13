@@ -30,6 +30,7 @@ export interface SynergySuggestion {
 export function suggestSynergy(
   teamHeroIds: string[],
   heroes: Record<string, TencentHero>,
+  laneHeroIds?: Set<string>,
 ): SynergySuggestion[] {
   const teamTags = teamHeroIds.map((id) => ALL_TAGS[id]).filter((t): t is ChampionTags => !!t);
 
@@ -53,6 +54,7 @@ export function suggestSynergy(
 
   return Object.entries(ALL_TAGS)
     .filter(([id]) => !teamHeroIds.includes(id))
+    .filter(([id]) => laneHeroIds === undefined || laneHeroIds.has(id))
     .map(([id, t]) => {
       const reasons: string[] = [];
       if (needs.tank && (t.class === "tank" || t.class === "fighter"))

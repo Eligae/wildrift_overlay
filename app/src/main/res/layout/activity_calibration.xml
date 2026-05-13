@@ -1,105 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="@color/lol_bg"
     android:fitsSystemWindows="true">
 
-    <TextView
-        style="@style/LolTitle"
+    <ImageView
+        android:id="@+id/calib_image"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:text="@string/calib_title"
-        android:textSize="20sp" />
+        android:layout_height="match_parent"
+        android:scaleType="fitCenter"
+        android:contentDescription="@null" />
 
-    <TextView
-        android:id="@+id/calib_status"
+    <com.eligae.wildrift.overlay.floating.RoiOverlayView
+        android:id="@+id/calib_roi"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="12dp"
-        android:textColor="@color/lol_ink_soft"
-        android:textSize="12sp" />
-
-    <FrameLayout
-        android:id="@+id/calib_frame"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:background="@color/lol_bg_elev">
-
-        <ImageView
-            android:id="@+id/calib_image"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="fitCenter"
-            android:contentDescription="@null" />
-
-        <com.eligae.wildrift.overlay.RoiOverlayView
-            android:id="@+id/calib_roi"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
-    </FrameLayout>
+        android:layout_height="match_parent" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
         android:orientation="vertical"
-        android:padding="12dp">
+        android:padding="12dp"
+        android:background="#CC0C1117">
+
+        <TextView
+            android:id="@+id/calib_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/lol_ink_soft"
+            android:textSize="11sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center_vertical">
-            <TextView android:layout_width="48dp" android:layout_height="wrap_content" android:text="L" android:textColor="@color/lol_gold" android:fontFamily="serif" />
-            <SeekBar android:id="@+id/seek_left" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:max="100" />
-            <TextView android:id="@+id/val_left" android:layout_width="48dp" android:layout_height="wrap_content" android:gravity="end" android:textColor="@color/lol_ink" android:textSize="12sp" />
-        </LinearLayout>
+            android:layout_marginTop="8dp">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-            <TextView android:layout_width="48dp" android:layout_height="wrap_content" android:text="T" android:textColor="@color/lol_gold" android:fontFamily="serif" />
-            <SeekBar android:id="@+id/seek_top" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:max="100" />
-            <TextView android:id="@+id/val_top" android:layout_width="48dp" android:layout_height="wrap_content" android:gravity="end" android:textColor="@color/lol_ink" android:textSize="12sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-            <TextView android:layout_width="48dp" android:layout_height="wrap_content" android:text="R" android:textColor="@color/lol_gold" android:fontFamily="serif" />
-            <SeekBar android:id="@+id/seek_right" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:max="100" />
-            <TextView android:id="@+id/val_right" android:layout_width="48dp" android:layout_height="wrap_content" android:gravity="end" android:textColor="@color/lol_ink" android:textSize="12sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-            <TextView android:layout_width="48dp" android:layout_height="wrap_content" android:text="B" android:textColor="@color/lol_gold" android:fontFamily="serif" />
-            <SeekBar android:id="@+id/seek_bottom" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:max="100" />
-            <TextView android:id="@+id/val_bottom" android:layout_width="48dp" android:layout_height="wrap_content" android:gravity="end" android:textColor="@color/lol_ink" android:textSize="12sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="12dp">
+            <Button
+                android:id="@+id/btn_pick"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/calib_pick_gallery" />
 
             <Button
                 android:id="@+id/btn_reset"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:layout_marginStart="8dp"
                 android:text="@string/calib_reset" />
 
             <Button
@@ -114,4 +65,4 @@
 
     </LinearLayout>
 
-</LinearLayout>
+</FrameLayout>

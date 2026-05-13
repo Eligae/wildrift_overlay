@@ -28,6 +28,11 @@ class ChampionsCache(context: Context) {
         return load()?.champions?.firstOrNull { it.krName == krName }?.avatar
     }
 
+    /** 한국명으로 heroId 조회. composition API 호출에 필요. */
+    fun heroIdFor(krName: String): String? {
+        return load()?.champions?.firstOrNull { it.krName == krName }?.heroId
+    }
+
     companion object {
         private const val NAME = "champions_cache"
         private const val KEY = "champions"

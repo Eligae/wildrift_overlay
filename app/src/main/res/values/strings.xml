@@ -6,6 +6,7 @@
     <string name="start_overlay">오버레이 시작</string>
     <string name="stop_overlay">오버레이 중지</string>
     <string name="permission_granted">권한 부여됨</string>
+    <string name="permission_granted_button">✓ 오버레이 권한 부여됨</string>
     <string name="permission_required">오버레이를 띄우려면 [다른 앱 위에 표시] 권한이 필요합니다.</string>
     <string name="notification_channel_name">오버레이 서비스</string>
     <string name="notification_channel_desc">오버레이가 떠 있는 동안 표시되는 알림입니다.</string>
@@ -38,11 +39,13 @@
     <string name="update_open">보기</string>
     <string name="open_calibration">OCR 영역 설정</string>
     <string name="open_match_history">전적 보기</string>
+    <string name="open_sound_trigger">사운드 트리거</string>
     <string name="calib_title">OCR ROI 캘리브레이션</string>
     <string name="calib_no_capture">캡처 PNG가 없습니다. 메인 화면에서 캡처를 한 번 진행한 후 다시 들어오세요.</string>
     <string name="calib_reset">초기화</string>
     <string name="calib_save">저장</string>
     <string name="calib_saved">저장됨. 다음 캡처부터 적용.</string>
+    <string name="calib_pick_gallery">갤러리</string>
     <string name="cohort_diamond">D</string>
     <string name="cohort_master">M</string>
     <string name="cohort_grandmaster">GM</string>

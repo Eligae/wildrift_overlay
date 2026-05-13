@@ -81,6 +81,11 @@ class OverlayPrefs(context: Context) {
         get() = prefs.getBoolean("match_end_detected", false)
         set(value) = prefs.edit().putBoolean("match_end_detected", value).apply()
 
+    /** 풀로딩에서 노란 닉네임 색상 감지로 잡은 본인 슬롯 (allies 0~4). 감지 실패 시 -1. */
+    var userSlot: Int
+        get() = prefs.getInt("user_slot", -1)
+        set(value) = prefs.edit().putInt("user_slot", value).apply()
+
     fun freshAllyAnchor(maxAgeMs: Long = 30 * 60 * 1000L): List<String>? {
         val ts = allyAnchorAtMs
         if (ts == 0L) return null

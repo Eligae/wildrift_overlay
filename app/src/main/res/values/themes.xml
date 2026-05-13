@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.WrSpellcheck" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="Theme.WrSpellcheck" parent="Theme.MaterialComponents.NoActionBar">
         <item name="colorPrimary">@color/lol_hex</item>
         <item name="colorOnPrimary">@color/lol_bg</item>
         <item name="colorSecondary">@color/lol_gold</item>

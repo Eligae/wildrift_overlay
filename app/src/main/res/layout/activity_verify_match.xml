@@ -53,7 +53,7 @@
             style="@style/LolTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="우리 팀"
+            android:text="우리 팀 (길게 눌러서 내 챔피언 마킹)"
             android:textSize="14sp" />
 
         <LinearLayout
@@ -69,8 +69,71 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginTop="8dp"
-            android:layout_marginBottom="24dp"
+            android:layout_marginBottom="16dp"
             android:background="@color/lol_rule" />
+
+        <LinearLayout
+            android:id="@+id/coaching_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone">
+
+            <TextView
+                style="@style/LolTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="회고 — 다른 선택지"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/coaching_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:textColor="@color/lol_ink_soft"
+                android:textSize="12sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="시너지 — 우리 팀 4명에 어울리는 5번째"
+                android:textColor="@color/lol_gold_soft"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/synergy_results"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:orientation="vertical" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="카운터 — 적 라인 상대 추천"
+                android:textColor="@color/lol_gold_soft"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/counter_results"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:orientation="vertical" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="16dp"
+                android:background="@color/lol_rule" />
+
+        </LinearLayout>
 
         <Button
             android:id="@+id/btn_verify_ok"

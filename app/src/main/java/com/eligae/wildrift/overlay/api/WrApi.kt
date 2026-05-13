@@ -38,7 +38,10 @@ interface WrApi {
     suspend fun getChampionSkinEntry(@retrofit2.http.Path("alias") alias: String): ChampionSkinEntry
 
     @GET("v1/composition/synergy")
-    suspend fun getSynergy(@Query("team") team: String): SynergyResponse
+    suspend fun getSynergy(
+        @Query("team") team: String,
+        @Query("lane") lane: String? = null,
+    ): SynergyResponse
 
     @GET("v1/composition/counter")
     suspend fun getCounter(@Query("enemy") enemy: String): CounterResponse

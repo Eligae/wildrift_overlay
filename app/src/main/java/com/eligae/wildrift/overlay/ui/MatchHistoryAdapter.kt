@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.eligae.wildrift.overlay.R
@@ -42,7 +43,8 @@ class MatchHistoryAdapter(
 
     inner class VH(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val result: TextView = itemView.findViewById(R.id.row_result)
-        private val avatars: LinearLayout = itemView.findViewById(R.id.row_avatars)
+        private val enemyRow: LinearLayout = itemView.findViewById(R.id.row_enemies)
+        private val allyRow: LinearLayout = itemView.findViewById(R.id.row_allies)
         private val time: TextView = itemView.findViewById(R.id.row_time)
 
         fun bind(r: MatchRecord) {
@@ -63,21 +65,51 @@ class MatchHistoryAdapter(
             time.text = SimpleDateFormat("MM/dd HH:mm", Locale.KOREA).format(Date(r.endedAtMs)) +
                 if (r.userVerified) " ✓" else ""
 
-            avatars.removeAllViews()
-            val density = itemView.context.resources.displayMetrics.density
-            val size = (28 * density).toInt()
-            for (name in r.enemies) {
-                val iv = ImageView(itemView.context).apply {
-                    layoutParams = LinearLayout.LayoutParams(size, size).apply {
-                        marginEnd = (4 * density).toInt()
-                    }
-                    scaleType = ImageView.ScaleType.CENTER_CROP
-                    val avatar = cache.avatarFor(name)
-                    if (avatar != null) load(avatar) else setBackgroundColor(Color.DKGRAY)
-                }
-                avatars.addView(iv)
-            }
+            renderAvatarRow(enemyRow, r.enemies, userSlot = null)
+            renderAvatarRow(allyRow, r.allies, userSlot = r.userSlot)
             itemView.setOnClickListener { onClick(r) }
+        }
+
+        private fun renderAvatarRow(row: LinearLayout, names: List<String>, userSlot: Int?) {
+            row.removeAllViews()
+            val density = itemView.context.resources.displayMetrics.density
+            val gap = (2 * density).toInt()
+            val cellHeight = (30 * density).toInt()
+            for (i in 0 until 5) {
+                val name = names.getOrNull(i) ?: ""
+                val cell = android.widget.FrameLayout(itemView.context).apply {
+                    layoutParams = LinearLayout.LayoutParams(0, cellHeight, 1f).apply {
+                        if (i < 4) marginEnd = gap
+                    }
+                }
+                val iv = ImageView(itemView.context).apply {
+                    layoutParams = android.widget.FrameLayout.LayoutParams(
+                        android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                        android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                    )
+                    scaleType = ImageView.ScaleType.CENTER_CROP
+                    val avatar = if (name.isNotBlank()) cache.avatarFor(name) else null
+                    if (avatar != null) load(avatar)
+                    else background = ContextCompat.getDrawable(
+                        itemView.context, R.drawable.bg_avatar_empty,
+                    )
+                }
+                cell.addView(iv)
+                if (userSlot != null && i == userSlot) {
+                    // 동일 크기 유지하면서 금색 테두리만 오버레이 (행 어긋남 방지).
+                    val overlay = View(itemView.context).apply {
+                        layoutParams = android.widget.FrameLayout.LayoutParams(
+                            android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                            android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                        )
+                        background = ContextCompat.getDrawable(
+                            itemView.context, R.drawable.bg_user_slot,
+                        )
+                    }
+                    cell.addView(overlay)
+                }
+                row.addView(cell)
+            }
         }
     }
 }

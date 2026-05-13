@@ -11,4 +11,6 @@
     <color name="lol_hex_deep">#005A82</color>
     <color name="lol_rule">#2A3340</color>
     <color name="lol_warn">#C8553D</color>
+    <color name="team_enemy_bg">#3D1B1B</color>
+    <color name="team_ally_bg">#1B2A3D</color>
 </resources>

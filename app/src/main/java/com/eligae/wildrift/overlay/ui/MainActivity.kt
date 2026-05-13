@@ -14,10 +14,13 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.TextView
+import android.content.res.ColorStateList
 import androidx.appcompat.widget.SwitchCompat
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.button.MaterialButton
 import com.eligae.wildrift.overlay.R
 import com.eligae.wildrift.overlay.capture.ScreenCaptureService
 import com.eligae.wildrift.overlay.floating.OverlayService
@@ -30,8 +33,7 @@ import kotlinx.coroutines.launch
 class MainActivity : AppCompatActivity() {
 
     private lateinit var prefs: OverlayPrefs
-    private lateinit var permissionStatus: TextView
-    private lateinit var btnGrant: Button
+    private lateinit var btnGrant: MaterialButton
     private lateinit var btnStart: Button
     private lateinit var seekScale: SeekBar
     private lateinit var scaleValue: TextView
@@ -56,6 +58,10 @@ class MainActivity : AppCompatActivity() {
         ActivityResultContracts.RequestPermission()
     ) { /* ignore result — 알림은 보조 UX */ }
 
+    private val audioPermLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* ignore — 사운드 트리거 기능에만 영향 */ }
+
     private val captureLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -70,7 +76,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         prefs = OverlayPrefs(this)
-        permissionStatus = findViewById(R.id.permission_status)
         btnGrant = findViewById(R.id.btn_grant)
         btnStart = findViewById(R.id.btn_start)
         seekScale = findViewById(R.id.seek_scale)
@@ -204,14 +209,19 @@ class MainActivity : AppCompatActivity() {
 
     private fun refreshPermissionUi() {
         val granted = Settings.canDrawOverlays(this)
+        btnStart.isEnabled = granted
+        // 권한 부여 상태에 따라 stroke/텍스트 색 + 라벨 전환. disabled 대신 시각 상태로 표현.
+        btnGrant.isEnabled = true
         if (granted) {
-            permissionStatus.setText(R.string.permission_granted)
-            btnGrant.isEnabled = false
-            btnStart.isEnabled = true
+            btnGrant.setText(R.string.permission_granted_button)
+            val teal = ContextCompat.getColor(this, R.color.lol_hex)
+            btnGrant.strokeColor = ColorStateList.valueOf(teal)
+            btnGrant.setTextColor(teal)
         } else {
-            permissionStatus.setText(R.string.permission_required)
-            btnGrant.isEnabled = true
-            btnStart.isEnabled = false
+            btnGrant.setText(R.string.grant_permission)
+            val gold = ContextCompat.getColor(this, R.color.lol_gold)
+            btnGrant.strokeColor = ColorStateList.valueOf(gold)
+            btnGrant.setTextColor(ContextCompat.getColor(this, R.color.lol_gold_soft))
         }
     }
 
@@ -248,6 +258,9 @@ class MainActivity : AppCompatActivity() {
         val granted = checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) ==
             PackageManager.PERMISSION_GRANTED
         if (!granted) notifPermLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        val audioGranted = checkSelfPermission(Manifest.permission.RECORD_AUDIO) ==
+            PackageManager.PERMISSION_GRANTED
+        if (!audioGranted) audioPermLauncher.launch(Manifest.permission.RECORD_AUDIO)
     }
 
     private fun progressToScale(progress: Int): Float = SCALE_MIN + progress * SCALE_STEP

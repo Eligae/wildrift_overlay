@@ -15,4 +15,6 @@ data class MatchRecord(
     val enemies: List<String>,
     val allies: List<String>,
     val userVerified: Boolean = false,
+    /** allies 인덱스 (0~4). 노란 닉네임 자동 감지 또는 사용자 수동 마킹. */
+    val userSlot: Int? = null,
 )

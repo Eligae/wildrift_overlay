@@ -158,9 +158,18 @@ router.get("/composition/synergy", async (req, res) => {
     res.status(400).json({ error: "team query required (comma-separated heroIds)" });
     return;
   }
+  const laneParam = typeof req.query.lane === "string" ? req.query.lane.toUpperCase() : null;
+  let laneHeroIds: Set<string> | undefined;
+  if (laneParam && (LANE_ORDER as string[]).includes(laneParam)) {
+    const cache = getCache();
+    if (cache) {
+      // DIAMOND cohort 기준 — 가장 넓은 표본. 해당 lane에 데이터 있는 챔피언만 후보.
+      laneHeroIds = new Set(cache.cohorts.DIAMOND[laneParam as LaneKey].map((c) => c.heroId));
+    }
+  }
   try {
     const heroes = await getHeroes();
-    res.json({ team, suggestions: suggestSynergy(team, heroes) });
+    res.json({ team, lane: laneParam, suggestions: suggestSynergy(team, heroes, laneHeroIds) });
   } catch (e) {
     res.status(500).json({ error: String(e instanceof Error ? e.message : e) });
   }

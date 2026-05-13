@@ -23,10 +23,12 @@ internal class CaptureSession(
 
     fun start() {
         val metrics = context.resources.displayMetrics
-        val width = metrics.widthPixels
-        val height = metrics.heightPixels
+        // WR은 landscape 고정 → surface도 landscape (큰 쪽 W, 작은 쪽 H)로 강제.
+        // 그래야 게임 픽셀이 letterbox 없이 surface 전체에 fit, rotate90 후 정상 비율.
+        val width = maxOf(metrics.widthPixels, metrics.heightPixels)
+        val height = minOf(metrics.widthPixels, metrics.heightPixels)
         val density = metrics.densityDpi
-        Log.d(TAG, "Display ${width}x${height} dpi=$density")
+        Log.d(TAG, "Display ${width}x${height} dpi=$density (forced landscape)")
 
         imageReader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 2)
         virtualDisplay = mediaProjection.createVirtualDisplay(

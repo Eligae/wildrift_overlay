@@ -1,23 +1,25 @@
 package com.eligae.wildrift.overlay.ui
 
+import android.content.pm.ActivityInfo
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.graphics.RectF
+import android.net.Uri
 import android.os.Bundle
 import android.widget.Button
 import android.widget.ImageView
-import android.widget.SeekBar
 import android.widget.TextView
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.eligae.wildrift.overlay.R
 import com.eligae.wildrift.overlay.floating.RoiOverlayView
 import com.eligae.wildrift.overlay.prefs.OverlayPrefs
-import java.io.File
 
 /**
- * 사용자 ROI 캘리브레이션. 가장 최근 캡처 PNG를 회전 표시 + 4 슬라이더로 사각형 박음.
- * PNG가 없으면 "캡처 먼저" 안내.
+ * ROI 캘리브레이션 — 최근 캡처 PNG 또는 갤러리 이미지를 가로 풀스크린으로 띄우고
+ * 빨간 사각형을 드래그·리사이즈해서 관심 영역(채팅 등) 지정. landscape 강제.
  */
 class CalibrationActivity : AppCompatActivity() {
 
@@ -25,43 +27,51 @@ class CalibrationActivity : AppCompatActivity() {
     private lateinit var imageView: ImageView
     private lateinit var roiView: RoiOverlayView
     private lateinit var status: TextView
-    private lateinit var seekL: SeekBar
-    private lateinit var seekT: SeekBar
-    private lateinit var seekR: SeekBar
-    private lateinit var seekB: SeekBar
-    private lateinit var valL: TextView
-    private lateinit var valT: TextView
-    private lateinit var valR: TextView
-    private lateinit var valB: TextView
+    private var currentBitmap: Bitmap? = null
+
+    private val pickImage = registerForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri: Uri? ->
+        if (uri != null) loadFromUri(uri) else status.text = "선택 취소됨"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         setContentView(R.layout.activity_calibration)
 
         prefs = OverlayPrefs(this)
         imageView = findViewById(R.id.calib_image)
         roiView = findViewById(R.id.calib_roi)
         status = findViewById(R.id.calib_status)
-        seekL = findViewById(R.id.seek_left)
-        seekT = findViewById(R.id.seek_top)
-        seekR = findViewById(R.id.seek_right)
-        seekB = findViewById(R.id.seek_bottom)
-        valL = findViewById(R.id.val_left)
-        valT = findViewById(R.id.val_top)
-        valR = findViewById(R.id.val_right)
-        valB = findViewById(R.id.val_bottom)
 
         loadLatestCapture()
-        initSliders()
+        roiView.roi = RectF(prefs.roiLeft, prefs.roiTop, prefs.roiRight, prefs.roiBottom)
+        roiView.listener = { r ->
+            status.text = "ROI %d%% %d%% → %d%% %d%%".format(
+                (r.left * 100).toInt(),
+                (r.top * 100).toInt(),
+                (r.right * 100).toInt(),
+                (r.bottom * 100).toInt(),
+            )
+        }
 
+        findViewById<Button>(R.id.btn_pick).setOnClickListener {
+            pickImage.launch(
+                PickVisualMediaRequest.Builder()
+                    .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    .build()
+            )
+        }
         findViewById<Button>(R.id.btn_reset).setOnClickListener {
-            setRoi(0f, 0f, 1f, 1f)
+            roiView.roi = RectF(0f, 0f, 1f, 1f)
         }
         findViewById<Button>(R.id.btn_save).setOnClickListener {
-            prefs.roiLeft = seekL.progress / 100f
-            prefs.roiTop = seekT.progress / 100f
-            prefs.roiRight = seekR.progress / 100f
-            prefs.roiBottom = seekB.progress / 100f
+            val r = roiView.roi
+            prefs.roiLeft = r.left
+            prefs.roiTop = r.top
+            prefs.roiRight = r.right
+            prefs.roiBottom = r.bottom
             status.text = getString(R.string.calib_saved)
             finish()
         }
@@ -75,65 +85,42 @@ class CalibrationActivity : AppCompatActivity() {
             status.text = getString(R.string.calib_no_capture)
             return
         }
-        val portrait = BitmapFactory.decodeFile(latest.absolutePath)
-        if (portrait == null) {
+        val bmp = BitmapFactory.decodeFile(latest.absolutePath)
+        if (bmp == null) {
             status.text = getString(R.string.calib_no_capture)
             return
         }
-        // 회전 frame에서 ROI를 박으므로 90도 시계 회전된 비트맵을 표시.
-        val rotated = rotate(portrait, 90f)
-        portrait.recycle()
-        imageView.setImageBitmap(rotated)
-        status.text = "${latest.name} · ${rotated.width}×${rotated.height} (rotated)"
+        // OcrProcessor.prepare()가 이미 rotate90 후 저장 → landscape 그대로 사용.
+        showBitmap(bmp, label = "${latest.name} · 캡처")
+    }
+
+    private fun loadFromUri(uri: Uri) {
+        val bmp = try {
+            contentResolver.openInputStream(uri).use { stream ->
+                BitmapFactory.decodeStream(stream)
+            }
+        } catch (t: Throwable) {
+            status.text = "이미지 로드 실패: ${t.message}"
+            return
+        }
+        if (bmp == null) {
+            status.text = "이미지 디코드 실패"
+            return
+        }
+        // 가로 이미지로 가정 (게임 스크린샷). 세로면 사용자가 다시 선택.
+        val display = if (bmp.width >= bmp.height) bmp else rotate(bmp, 90f).also { bmp.recycle() }
+        showBitmap(display, label = "갤러리 · ${display.width}×${display.height}")
+    }
+
+    private fun showBitmap(bmp: Bitmap, label: String) {
+        currentBitmap?.recycle()
+        currentBitmap = bmp
+        imageView.setImageBitmap(bmp)
+        status.text = label
     }
 
     private fun rotate(src: Bitmap, deg: Float): Bitmap {
         val m = Matrix().apply { postRotate(deg) }
         return Bitmap.createBitmap(src, 0, 0, src.width, src.height, m, true)
-    }
-
-    private fun initSliders() {
-        val l = (prefs.roiLeft * 100).toInt()
-        val t = (prefs.roiTop * 100).toInt()
-        val r = (prefs.roiRight * 100).toInt()
-        val b = (prefs.roiBottom * 100).toInt()
-        setRoi(l / 100f, t / 100f, r / 100f, b / 100f)
-
-        val listener = object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (!fromUser) return
-                refreshFromSeekBars()
-            }
-            override fun onStartTrackingTouch(sb: SeekBar?) {}
-            override fun onStopTrackingTouch(sb: SeekBar?) {}
-        }
-        seekL.setOnSeekBarChangeListener(listener)
-        seekT.setOnSeekBarChangeListener(listener)
-        seekR.setOnSeekBarChangeListener(listener)
-        seekB.setOnSeekBarChangeListener(listener)
-    }
-
-    private fun refreshFromSeekBars() {
-        val l = (seekL.progress / 100f).coerceIn(0f, 1f)
-        val t = (seekT.progress / 100f).coerceIn(0f, 1f)
-        val r = (seekR.progress / 100f).coerceIn(0f, 1f)
-        val b = (seekB.progress / 100f).coerceIn(0f, 1f)
-        applyRoi(l, t, r, b)
-    }
-
-    private fun setRoi(l: Float, t: Float, r: Float, b: Float) {
-        seekL.progress = (l * 100).toInt()
-        seekT.progress = (t * 100).toInt()
-        seekR.progress = (r * 100).toInt()
-        seekB.progress = (b * 100).toInt()
-        applyRoi(l, t, r, b)
-    }
-
-    private fun applyRoi(l: Float, t: Float, r: Float, b: Float) {
-        roiView.roi = RectF(l, t, r, b)
-        valL.text = "%d%%".format((l * 100).toInt())
-        valT.text = "%d%%".format((t * 100).toInt())
-        valR.text = "%d%%".format((r * 100).toInt())
-        valB.text = "%d%%".format((b * 100).toInt())
     }
 }

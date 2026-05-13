@@ -41,14 +41,15 @@ object ChatParser {
             // 시스템 메시지 형식 "[닉네임] [챔피언] - [스펠]" 가정.
             // 스펠 앞쪽에서 가장 마지막에 등장한 챔피언명을 진짜 챔피언으로 본다.
             val pre = text.substring(0, spellIdx)
+            // 같은 위치에서 시작하는 후보 중 더 긴 이름이 우선 (예: "카직스" vs "직스"). 위치는 end 기준.
             val champ = allNames
                 .mapNotNull { name ->
                     val idx = KoreanFuzzy.fuzzyLastIndexOf(pre, name)
-                    if (idx >= 0) name to idx else null
+                    if (idx >= 0) Triple(name, idx, idx + name.length) else null
                 }
-                .maxByOrNull { it.second }
+                .maxWithOrNull(compareBy({ it.third }, { it.first.length }))
                 ?.first
-                ?: KoreanFuzzy.bestMatch(pre, candidates, threshold = 0.7)?.first
+                ?: KoreanFuzzy.bestMatch(pre, candidates, threshold = 0.85)?.first
                 ?: continue
             val canon = skinAliasMap[champ] ?: ChampionRegistry.canonical(champ)
             results.add(Match(canon, spellEntry.value))

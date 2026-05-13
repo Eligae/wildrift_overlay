@@ -102,13 +102,28 @@
 
         </LinearLayout>
 
-        <TextView
-            style="@style/LolTitle"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/app_title"
-            android:textSize="28sp"
-            android:paddingBottom="6dp" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingBottom="6dp">
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="10dp"
+                android:src="@drawable/ic_launcher_foreground"
+                android:contentDescription="@null" />
+
+            <TextView
+                style="@style/LolTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/app_title"
+                android:textSize="24sp" />
+
+        </LinearLayout>
 
         <View
             android:layout_width="48dp"
@@ -116,20 +131,10 @@
             android:background="@color/lol_gold"
             android:layout_marginBottom="20dp" />
 
-        <TextView
-            android:id="@+id/permission_status"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:textColor="@color/lol_ink_soft"
-            android:textSize="13sp"
-            android:background="@color/lol_bg_elev" />
-
         <Button
             android:id="@+id/btn_grant"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
             android:text="@string/grant_permission" />
 
         <Button
@@ -140,13 +145,35 @@
             android:enabled="false"
             android:text="@string/start_overlay" />
 
+        <Button
+            android:id="@+id/btn_capture"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/capture_test" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/lol_rule"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="12dp" />
+
         <TextView
             style="@style/LolTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
+            android:text="설정"
+            android:textSize="14sp"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            style="@style/LolTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:text="@string/scale_label"
-            android:textSize="16sp" />
+            android:textSize="13sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -176,9 +203,9 @@
             style="@style/LolTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="12dp"
             android:text="@string/alpha_label"
-            android:textSize="16sp" />
+            android:textSize="13sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -217,42 +244,61 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="@color/lol_rule"
-            android:layout_marginTop="32dp"
-            android:layout_marginBottom="16dp" />
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="12dp" />
 
-        <Button
-            android:id="@+id/btn_tier"
+        <TextView
+            style="@style/LolTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/open_tier" />
+            android:text="보기"
+            android:textSize="14sp"
+            android:layout_marginBottom="8dp" />
 
-        <Button
-            android:id="@+id/btn_composition"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btn_tier"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/open_tier" />
+
+            <Button
+                android:id="@+id/btn_composition"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:text="@string/open_composition" />
+
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="@string/open_composition" />
+            android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/btn_calibration"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/open_calibration" />
+            <Button
+                android:id="@+id/btn_match_history"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/open_match_history" />
 
-        <Button
-            android:id="@+id/btn_match_history"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/open_match_history" />
+            <Button
+                android:id="@+id/btn_calibration"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:text="@string/open_calibration" />
 
-        <Button
-            android:id="@+id/btn_capture"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/capture_test" />
+        </LinearLayout>
 
     </LinearLayout>
 

@@ -62,21 +62,19 @@ internal class OcrProcessor(
     }
 
     /**
-     * 항상 rotate90 적용 후 처리. ML Kit과 후속 crop(SpellMatcher 등)이 같은 좌표계를 공유.
-     * rotationDegrees는 항상 0 — 결과 boundingBox는 rotated frame 기준.
+     * VirtualDisplay가 이미 landscape 차원으로 강제됨 → 추가 회전 불필요.
+     * 캡처된 비트맵 좌표계 = 게임 화면 좌표계 그대로.
      */
     private fun prepare(bitmap: Bitmap, prefs: OverlayPrefs): Pair<Bitmap, Int> {
-        val rotated = BitmapUtils.rotate90(bitmap)
-        bitmap.recycle()
         return if (prefs.hasCustomRoi) {
             val cropped = BitmapUtils.cropByRatio(
-                rotated,
+                bitmap,
                 prefs.roiLeft, prefs.roiTop, prefs.roiRight, prefs.roiBottom,
             )
-            rotated.recycle()
+            bitmap.recycle()
             cropped to 0
         } else {
-            rotated to 0
+            bitmap to 0
         }
     }
 
@@ -125,6 +123,7 @@ internal class OcrProcessor(
                 val id = System.currentTimeMillis()
                 val enemies = (1..5).map { prefs.loadSlot(it).championName ?: "" }
                 val allies = (1..5).map { prefs.loadAllySlotChampion(it) ?: "" }
+                val userSlotValue = prefs.userSlot.takeIf { it >= 0 }
                 val record = MatchRecord(
                     id = id,
                     startedAtMs = prefs.matchStartedAtMs,
@@ -133,10 +132,12 @@ internal class OcrProcessor(
                     enemies = enemies,
                     allies = allies,
                     userVerified = false,
+                    userSlot = userSlotValue,
                 )
                 MatchHistoryStore(context.applicationContext).add(record)
                 prefs.matchEndDetected = true
-                Log.d(TAG, "MATCH END detected: $matchResult, record id=$id")
+                prefs.userSlot = -1  // 다음 게임 위해 초기화
+                Log.d(TAG, "MATCH END detected: $matchResult, record id=$id, userSlot=$userSlotValue")
                 onMatchEnded(id)
                 return
             }
@@ -161,7 +162,42 @@ internal class OcrProcessor(
         val teams = LoadingScreenParser.parseTeams(locs, rotatedFrameHeight, anchor, dynamicNames, skinAliasMap)
 
         maybeSaveAllyAnchor(teams.picks, prefs)
+        maybeDetectUserSlot(teams, result.textBlocks.map { it.boundingBox }, scaled, prefs)
         broadcastEnemiesIfPass(scaled, teams, prefs, anchor != null)
+    }
+
+    /**
+     * 풀로딩(10명) 화면에서 본인 닉네임의 노란 색상 검출 → userChampion → allies 슬롯 산출.
+     * picks가 6명 이상 = 10명 풀로딩이거나 그 비슷한 화면에서만 실행 (봇 게임 사전 화면 등 false-positive 방지).
+     * 한 게임에 1회만 잡으면 충분.
+     */
+    private fun maybeDetectUserSlot(
+        teams: LoadingScreenParser.Teams,
+        boxes: List<android.graphics.Rect?>,
+        bitmap: android.graphics.Bitmap,
+        prefs: OverlayPrefs,
+    ) {
+        if (prefs.userSlot >= 0) return
+        if (teams.picks.size < 6) return  // 풀로딩 전 사전 화면 skip
+        val candidates = teams.picks.map {
+            com.eligae.wildrift.overlay.parse.UserSlotDetector.Candidate(it.centerX, it.centerY)
+        }
+        val idx = com.eligae.wildrift.overlay.parse.UserSlotDetector
+            .findUserPickIndex(candidates, boxes, bitmap) ?: return
+        val userChampion = teams.picks[idx].canonical
+        val allySlot = teams.allies.indexOfFirst { it == userChampion }
+        if (allySlot >= 0) {
+            prefs.userSlot = allySlot
+            Log.d(TAG, "USER SLOT detected: champion=$userChampion, allySlot=$allySlot")
+            return
+        }
+        // allies에 없으면 enemies에 있는지도 확인 — team splitter 오류 가능성.
+        val enemySlot = teams.enemies.indexOfFirst { it == userChampion }
+        if (enemySlot >= 0) {
+            Log.d(TAG, "USER SLOT: yellow matched $userChampion but in ENEMIES[$enemySlot] (splitter mismatch — skip)")
+        } else {
+            Log.d(TAG, "USER SLOT: yellow matched $userChampion but not in allies/enemies")
+        }
     }
 
     /**
@@ -309,15 +345,28 @@ internal class OcrProcessor(
         return try { spellMatcher.match(crop) } finally { crop.recycle() }
     }
 
+    /**
+     * 캘리브레이션 화면이 "가장 최근 캡처 1장"만 필요. 매번 같은 파일명에 덮어쓰기 → 디스크 누적 0.
+     * PNG 압축은 무거우므로 백그라운드 스레드에서 실행 (OCR listener thread 차단 방지).
+     */
     private fun saveBitmap(bitmap: Bitmap) {
-        try {
-            val dir = context.getExternalFilesDir(null)
-            val file = File(dir, "capture_${System.currentTimeMillis()}.png")
-            file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 80, it) }
-            Log.d(TAG, "Saved: ${file.name} (${bitmap.width}x${bitmap.height})")
+        // copy를 떠야 호출자 쪽에서 recycle()해도 안전.
+        val snapshot = try {
+            bitmap.copy(bitmap.config ?: Bitmap.Config.ARGB_8888, false)
         } catch (t: Throwable) {
-            Log.e(TAG, "Save failed", t)
+            Log.e(TAG, "snapshot failed", t); return
         }
+        Thread {
+            try {
+                val dir = context.getExternalFilesDir(null)
+                val file = File(dir, "capture_latest.png")
+                file.outputStream().use { snapshot.compress(Bitmap.CompressFormat.PNG, 80, it) }
+            } catch (t: Throwable) {
+                Log.e(TAG, "Save failed", t)
+            } finally {
+                snapshot.recycle()
+            }
+        }.start()
     }
 
     companion object {

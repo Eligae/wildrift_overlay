@@ -93,7 +93,7 @@ object LoadingScreenParser {
                 }
             }
             if (matched == null) {
-                matched = KoreanFuzzy.bestMatch(text, candidates, threshold = 0.7)?.first
+                matched = KoreanFuzzy.bestMatch(text, candidates, threshold = 0.85)?.first
             }
             if (matched != null) {
                 val canon = skinAliasMap[matched] ?: ChampionRegistry.canonical(matched)
@@ -128,7 +128,7 @@ object LoadingScreenParser {
                 }
             }
             if (!hit) {
-                val best = KoreanFuzzy.bestMatch(text, candidates, threshold = 0.7)?.first
+                val best = KoreanFuzzy.bestMatch(text, candidates, threshold = 0.85)?.first
                 if (best != null) {
                     val canon = skinAliasMap[best] ?: ChampionRegistry.canonical(best)
                     if (!found.contains(canon)) found.add(canon)

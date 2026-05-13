@@ -125,14 +125,22 @@ class SlotView(
     private fun toggle(which: SlotButton) {
         val now = System.currentTimeMillis()
         state = when (which) {
-            SlotButton.SPELL_1 -> state.copy(
-                spell1ReadyAtEpochMs = if (state.spell1ReadyAtEpochMs == null)
-                    now + state.spell1.defaultCooldownSec * 1000L else null
-            )
-            SlotButton.SPELL_2 -> state.copy(
-                spell2ReadyAtEpochMs = if (state.spell2ReadyAtEpochMs == null)
-                    now + state.spell2.defaultCooldownSec * 1000L else null
-            )
+            SlotButton.SPELL_1 -> {
+                val s = state.spell1 ?: Spell.FLASH
+                state.copy(
+                    spell1 = s,
+                    spell1ReadyAtEpochMs = if (state.spell1ReadyAtEpochMs == null)
+                        now + s.defaultCooldownSec * 1000L else null,
+                )
+            }
+            SlotButton.SPELL_2 -> {
+                val s = state.spell2 ?: Spell.IGNITE
+                state.copy(
+                    spell2 = s,
+                    spell2ReadyAtEpochMs = if (state.spell2ReadyAtEpochMs == null)
+                        now + s.defaultCooldownSec * 1000L else null,
+                )
+            }
         }
         prefs.saveSlot(state)
         render()
@@ -140,8 +148,8 @@ class SlotView(
 
     private fun cycleSpell(which: SlotButton) {
         state = when (which) {
-            SlotButton.SPELL_1 -> state.copy(spell1 = state.spell1.next())
-            SlotButton.SPELL_2 -> state.copy(spell2 = state.spell2.next())
+            SlotButton.SPELL_1 -> state.copy(spell1 = (state.spell1 ?: Spell.FLASH).next())
+            SlotButton.SPELL_2 -> state.copy(spell2 = (state.spell2 ?: Spell.IGNITE).next())
         }
         prefs.saveSlot(state)
         render()
@@ -164,7 +172,14 @@ class SlotView(
         renderButton(spell2Button, state.spell2, state.spell2ReadyAtEpochMs)
     }
 
-    private fun renderButton(btn: TextView, spell: Spell, readyAt: Long?) {
+    private fun renderButton(btn: TextView, spell: Spell?, readyAt: Long?) {
+        if (spell == null) {
+            // 미감지 — 배경 없이 "?" 표시. 사용자가 long-press 해서 수동 설정 유도.
+            btn.background = null
+            btn.text = "?"
+            btn.setTextColor(Color.parseColor("#A8A194"))
+            return
+        }
         btn.setBackgroundResource(spell.iconRes)
         if (readyAt == null) {
             btn.text = ""
@@ -174,7 +189,7 @@ class SlotView(
         val now = System.currentTimeMillis()
         val remaining = ((readyAt - now + 999) / 1000).toInt().coerceAtLeast(0)
         btn.text = remaining.toString()
-        btn.background?.alpha = 100  // 카운트다운 중에는 아이콘 흐리게
+        btn.background?.alpha = 100
         btn.setTextColor(if (remaining > 10) Color.WHITE else Color.parseColor("#FF6633"))
     }
 
