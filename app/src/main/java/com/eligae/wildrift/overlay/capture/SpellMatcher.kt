@@ -22,7 +22,7 @@ class SpellMatcher(context: Context) {
      * 풀로딩 카드 스펠은 카드별 anti-aliasing 차이로 같은 스펠도 distance 10~22 발생.
      * threshold 초과 또는 best/2nd 차이가 [marginMin] 미만이면 ambiguous → null.
      */
-    fun match(crop: Bitmap, threshold: Int = 22, marginMin: Int = 4): Spell? {
+    fun match(crop: Bitmap, threshold: Int = 14, marginMin: Int = 6): Spell? {
         val hash = dHash(crop)
         var best: Spell? = null
         var bestDist = Int.MAX_VALUE

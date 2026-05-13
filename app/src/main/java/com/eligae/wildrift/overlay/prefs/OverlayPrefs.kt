@@ -107,8 +107,11 @@ class OverlayPrefs(context: Context) {
         return SlotState(
             index = index,
             championName = prefs.getString("${k}_champion", null)?.takeIf { it.isNotBlank() },
-            spell1 = Spell.entries.getOrElse(prefs.getInt("${k}_spell1", 0)) { Spell.FLASH },
-            spell2 = Spell.entries.getOrElse(prefs.getInt("${k}_spell2", 1)) { Spell.IGNITE },
+            // -1 = 미감지 (null), 0~6 = Spell ordinal.
+            spell1 = prefs.getInt("${k}_spell1", -1).takeIf { it >= 0 }
+                ?.let { Spell.entries.getOrNull(it) },
+            spell2 = prefs.getInt("${k}_spell2", -1).takeIf { it >= 0 }
+                ?.let { Spell.entries.getOrNull(it) },
             spell1ReadyAtEpochMs = prefs.getLong("${k}_spell1_ready", -1L).takeIf { it > 0 },
             spell2ReadyAtEpochMs = prefs.getLong("${k}_spell2_ready", -1L).takeIf { it > 0 },
         )
@@ -118,8 +121,8 @@ class OverlayPrefs(context: Context) {
         val k = "slot_${state.index}"
         prefs.edit().apply {
             putString("${k}_champion", state.championName ?: "")
-            putInt("${k}_spell1", state.spell1.ordinal)
-            putInt("${k}_spell2", state.spell2.ordinal)
+            putInt("${k}_spell1", state.spell1?.ordinal ?: -1)
+            putInt("${k}_spell2", state.spell2?.ordinal ?: -1)
             putLong("${k}_spell1_ready", state.spell1ReadyAtEpochMs ?: -1L)
             putLong("${k}_spell2_ready", state.spell2ReadyAtEpochMs ?: -1L)
         }.apply()

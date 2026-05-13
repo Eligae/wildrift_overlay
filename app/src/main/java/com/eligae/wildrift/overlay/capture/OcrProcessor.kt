@@ -63,10 +63,13 @@ internal class OcrProcessor(
 
     /**
      * VirtualDisplay가 이미 landscape 차원으로 강제됨 → 추가 회전 불필요.
-     * 캡처된 비트맵 좌표계 = 게임 화면 좌표계 그대로.
+     * ROI는 **인게임 채팅 감지용** — 매치 시작 전(로딩/메뉴)에는 풀 비트맵으로 10명 챔피언 식별.
+     *   - matchStartedAtMs == 0 (or end detected) → 풀 비트맵
+     *   - in-game → custom ROI (있으면) 적용해서 채팅 영역만 빠르게 OCR
      */
     private fun prepare(bitmap: Bitmap, prefs: OverlayPrefs): Pair<Bitmap, Int> {
-        return if (prefs.hasCustomRoi) {
+        val inGame = prefs.matchStartedAtMs > 0L && !prefs.matchEndDetected
+        return if (inGame && prefs.hasCustomRoi) {
             val cropped = BitmapUtils.cropByRatio(
                 bitmap,
                 prefs.roiLeft, prefs.roiTop, prefs.roiRight, prefs.roiBottom,
