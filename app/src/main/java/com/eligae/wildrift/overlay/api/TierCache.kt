@@ -10,12 +10,12 @@ class TierCache(context: Context) {
     private val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     private val adapter = moshi.adapter(TierAllResponse::class.java)
 
-    fun save(resp: TierAllResponse) {
-        prefs.edit().putString(KEY_TIER, adapter.toJson(resp)).apply()
+    fun save(cohort: String, resp: TierAllResponse) {
+        prefs.edit().putString(keyFor(cohort), adapter.toJson(resp)).apply()
     }
 
-    fun load(): TierAllResponse? {
-        val json = prefs.getString(KEY_TIER, null) ?: return null
+    fun load(cohort: String): TierAllResponse? {
+        val json = prefs.getString(keyFor(cohort), null) ?: return null
         return try {
             adapter.fromJson(json)
         } catch (_: Throwable) {
@@ -23,8 +23,9 @@ class TierCache(context: Context) {
         }
     }
 
+    private fun keyFor(cohort: String) = "tier_$cohort"
+
     companion object {
         private const val NAME = "tier_cache"
-        private const val KEY_TIER = "tier_all"
     }
 }

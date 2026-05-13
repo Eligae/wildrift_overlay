@@ -15,12 +15,17 @@ class TierAdapter(
     private var items: List<NormalizedHero> = emptyList(),
 ) : RecyclerView.Adapter<TierAdapter.VH>() {
 
+    enum class HighlightKey { WIN, PICK, BAN }
+
+    private var highlight: HighlightKey = HighlightKey.WIN
+
     class VH(view: View) : RecyclerView.ViewHolder(view) {
         val rank: TextView = view.findViewById(R.id.rank)
         val avatar: ImageView = view.findViewById(R.id.avatar)
         val name: TextView = view.findViewById(R.id.name)
         val subRates: TextView = view.findViewById(R.id.sub_rates)
-        val winRate: TextView = view.findViewById(R.id.win_rate)
+        val bigRate: TextView = view.findViewById(R.id.win_rate)
+        val bigLabel: TextView = view.findViewById(R.id.highlight_label)
 
         init {
             avatar.clipToOutline = true
@@ -28,8 +33,9 @@ class TierAdapter(
         }
     }
 
-    fun submit(list: List<NormalizedHero>) {
+    fun submit(list: List<NormalizedHero>, highlight: HighlightKey = HighlightKey.WIN) {
         items = list
+        this.highlight = highlight
         notifyDataSetChanged()
     }
 
@@ -43,9 +49,27 @@ class TierAdapter(
         val hero = items[position]
         holder.rank.text = (position + 1).toString()
         holder.name.text = hero.displayName
-        holder.winRate.text = "${(hero.winRate * 100).fmt1()}%"
-        holder.subRates.text =
-            "P ${(hero.pickRate * 100).fmt1()}%  ·  B ${(hero.banRate * 100).fmt1()}%"
+
+        val w = hero.winRate * 100
+        val p = hero.pickRate * 100
+        val b = hero.banRate * 100
+        when (highlight) {
+            HighlightKey.WIN -> {
+                holder.bigRate.text = "${w.fmt1()}%"
+                holder.bigLabel.setText(R.string.win_label)
+                holder.subRates.text = "P ${p.fmt1()}%  ·  B ${b.fmt1()}%"
+            }
+            HighlightKey.PICK -> {
+                holder.bigRate.text = "${p.fmt1()}%"
+                holder.bigLabel.setText(R.string.pick_label)
+                holder.subRates.text = "W ${w.fmt1()}%  ·  B ${b.fmt1()}%"
+            }
+            HighlightKey.BAN -> {
+                holder.bigRate.text = "${b.fmt1()}%"
+                holder.bigLabel.setText(R.string.ban_label)
+                holder.subRates.text = "W ${w.fmt1()}%  ·  P ${p.fmt1()}%"
+            }
+        }
 
         if (hero.avatar.isNotBlank()) {
             holder.avatar.load(hero.avatar) {
@@ -55,9 +79,9 @@ class TierAdapter(
             holder.avatar.setImageDrawable(null)
         }
 
-        val highlight = position < 3
+        val rowHighlight = position < 3
         holder.itemView.setBackgroundResource(
-            if (highlight) R.drawable.bg_tier_row_top else R.drawable.bg_tier_row
+            if (rowHighlight) R.drawable.bg_tier_row_top else R.drawable.bg_tier_row
         )
     }
 

@@ -23,7 +23,20 @@ data class TierLaneResponse(
 
 data class TierAllResponse(
     val fetchedAt: Long,
+    val cohort: String,
     val lanes: Map<String, List<NormalizedHero>>,
+)
+
+data class TierAllCohortsResponse(
+    val fetchedAt: Long,
+    val cohorts: Map<String, Map<String, List<NormalizedHero>>>,
+)
+
+data class NewsResponse(
+    val title: String,
+    val url: String,
+    val publishedAt: String,
+    val fetchedAt: Long,
 )
 
 data class LanesResponse(
@@ -39,6 +52,30 @@ data class ChampionEntry(
 data class ChampionsResponse(
     val champions: List<ChampionEntry>,
     val fetchedAt: Long? = null,
+)
+
+data class ChampionSkinsResponse(
+    val fetchedAt: String,
+    val sha256: String,
+    val skins: Map<String, String>, // skin name → champion krName
+)
+
+data class ChampionSkinsVersionResponse(
+    val sha256: String,
+    val fetchedAt: String,
+)
+
+data class ChampionSkinsManifestResponse(
+    val fetchedAt: String,
+    val sha256: String,
+    val champions: Map<String, String>, // alias → champion-level sha256
+)
+
+data class ChampionSkinEntry(
+    val alias: String,
+    val krName: String,
+    val skins: List<String>,
+    val sha256: String,
 )
 
 data class SynergySuggestion(

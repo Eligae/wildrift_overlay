@@ -27,8 +27,9 @@ object LoadingScreenParser {
         rotatedFrameHeight: Int,
         allyAnchor: List<String>? = null,
         extraKnownNames: Set<String> = emptySet(),
+        skinAliasMap: Map<String, String> = emptyMap(),
     ): Teams {
-        val picks = extractPicks(blocks, extraKnownNames)
+        val picks = extractPicks(blocks, extraKnownNames, skinAliasMap)
         if (allyAnchor != null && allyAnchor.isNotEmpty()) {
             val anchorSet = allyAnchor.toSet()
             val allyPicks = picks.filter { it.canonical in anchorSet }
@@ -69,23 +70,35 @@ object LoadingScreenParser {
         return slots
     }
 
-    private fun extractPicks(blocks: List<TextLoc>, extra: Set<String>): List<Pick> {
+    private fun extractPicks(
+        blocks: List<TextLoc>,
+        extra: Set<String>,
+        skinAliasMap: Map<String, String>,
+    ): List<Pick> {
         val picks = mutableListOf<Pick>()
-        // 길이 내림차순 정렬 — 짧은 이름이 긴 이름의 부분 fuzzy로 잘못 매칭되는 사고 방지
-        // (예: "신지드" 텍스트에 "진"이 ㅅ↔ㅈ 유사로 매칭되는 false-positive).
-        val allNames: List<String> = (ChampionRegistry.KNOWN_NAMES + extra)
+        // 후보 = 정적 KNOWN_NAMES + 동적 챔피언명 + 스킨명. 길이 내림차순으로 짧은 이름이 긴 이름의
+        // 부분 fuzzy로 잘못 매칭되는 사고 방지 (예: "신지드" 텍스트에 "진"이 ㅅ↔ㅈ 유사로 매칭).
+        val allNames: List<String> = (ChampionRegistry.KNOWN_NAMES + extra + skinAliasMap.keys)
             .distinct()
             .sortedByDescending { it.length }
+        val candidates = KoreanFuzzy.Candidates(allNames)
         for (b in blocks) {
             val text = b.text.replace("\n", " ")
+            var matched: String? = null
             for (name in allNames) {
                 if (name.isBlank()) continue
                 if (KoreanFuzzy.fuzzyContains(text, name)) {
-                    val canon = ChampionRegistry.canonical(name)
-                    if (picks.none { it.canonical == canon }) {
-                        picks.add(Pick(canon, b.centerX, b.centerY))
-                    }
+                    matched = name
                     break
+                }
+            }
+            if (matched == null) {
+                matched = KoreanFuzzy.bestMatch(text, candidates, threshold = 0.7)?.first
+            }
+            if (matched != null) {
+                val canon = skinAliasMap[matched] ?: ChampionRegistry.canonical(matched)
+                if (picks.none { it.canonical == canon }) {
+                    picks.add(Pick(canon, b.centerX, b.centerY))
                 }
             }
         }
@@ -93,17 +106,31 @@ object LoadingScreenParser {
     }
 
     /** 좌표 정보 없는 단순 추출 (fallback). */
-    fun parse(blocks: List<String>, extraKnownNames: Set<String> = emptySet()): List<String> {
+    fun parse(
+        blocks: List<String>,
+        extraKnownNames: Set<String> = emptySet(),
+        skinAliasMap: Map<String, String> = emptyMap(),
+    ): List<String> {
         val found = mutableListOf<String>()
-        val allNames: List<String> = (ChampionRegistry.KNOWN_NAMES + extraKnownNames)
+        val allNames: List<String> = (ChampionRegistry.KNOWN_NAMES + extraKnownNames + skinAliasMap.keys)
             .distinct()
             .sortedByDescending { it.length }
+        val candidates = KoreanFuzzy.Candidates(allNames)
         for (raw in blocks) {
             val text = raw.replace("\n", " ")
+            var hit = false
             for (name in allNames) {
                 if (name.isBlank()) continue
                 if (KoreanFuzzy.fuzzyContains(text, name)) {
-                    val canon = ChampionRegistry.canonical(name)
+                    val canon = skinAliasMap[name] ?: ChampionRegistry.canonical(name)
+                    if (!found.contains(canon)) found.add(canon)
+                    hit = true
+                }
+            }
+            if (!hit) {
+                val best = KoreanFuzzy.bestMatch(text, candidates, threshold = 0.7)?.first
+                if (best != null) {
+                    val canon = skinAliasMap[best] ?: ChampionRegistry.canonical(best)
                     if (!found.contains(canon)) found.add(canon)
                 }
             }

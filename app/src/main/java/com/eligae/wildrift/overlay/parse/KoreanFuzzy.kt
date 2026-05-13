@@ -112,4 +112,129 @@ object KoreanFuzzy {
         }
         return -1
     }
+
+    // --- 자모 단위 가중 Levenshtein 기반 최근접 매칭 -------------------
+
+    /** 자모 토큰: 초성/중성/종성·기타 문자를 구분된 int로 인코딩. */
+    private const val MEDIAL_BASE = 100
+    private const val FINAL_BASE = 200
+    private const val OTHER_BASE = 1000
+
+    /** 한글은 자모 단위로, 비한글은 char 단위로 token 시퀀스 생성. */
+    private fun tokenize(s: String): IntArray {
+        val out = ArrayList<Int>(s.length * 3)
+        for (c in s) {
+            val j = decompose(c)
+            if (j != null) {
+                out.add(j.initial)
+                out.add(MEDIAL_BASE + j.medial)
+                if (j.final != 0) out.add(FINAL_BASE + j.final)
+            } else if (c == ' ' || c == '\t') {
+                // 공백은 무시 — OCR이 단어 사이 공백을 일관성 없이 넣음.
+            } else {
+                out.add(OTHER_BASE + c.code)
+            }
+        }
+        return IntArray(out.size) { out[it] }
+    }
+
+    /** subst 비용. 시각 유사 자모 0.5, 그 외 1.0. */
+    private fun substCost(a: Int, b: Int): Double {
+        if (a == b) return 0.0
+        // 초성 영역 (0..18)
+        if (a in 0..18 && b in 0..18) {
+            if (SIMILAR_INITIAL[a]?.contains(b) == true) return 0.5
+            return 1.0
+        }
+        // 종성 영역 (FINAL_BASE..)
+        if (a >= FINAL_BASE && a < OTHER_BASE && b >= FINAL_BASE && b < OTHER_BASE) {
+            val fa = a - FINAL_BASE
+            val fb = b - FINAL_BASE
+            if (SIMILAR_FINAL[fa]?.contains(fb) == true) return 0.5
+            return 1.0
+        }
+        return 1.0
+    }
+
+    /** 두 토큰 시퀀스의 가중 Levenshtein. */
+    private fun weightedDistance(a: IntArray, b: IntArray): Double {
+        val n = a.size; val m = b.size
+        if (n == 0) return m.toDouble()
+        if (m == 0) return n.toDouble()
+        var prev = DoubleArray(m + 1) { it.toDouble() }
+        var curr = DoubleArray(m + 1)
+        for (i in 1..n) {
+            curr[0] = i.toDouble()
+            for (j in 1..m) {
+                val cost = substCost(a[i - 1], b[j - 1])
+                curr[j] = minOf(
+                    prev[j] + 1.0,        // deletion
+                    curr[j - 1] + 1.0,    // insertion
+                    prev[j - 1] + cost,   // substitution
+                )
+            }
+            val tmp = prev; prev = curr; curr = tmp
+        }
+        return prev[m]
+    }
+
+    /**
+     * text 안에서 name과 가장 유사한 substring 점수(0~1).
+     * name 토큰 길이 ±Δ 윈도우를 슬라이드. 윈도우 없으면 전체 거리.
+     */
+    private fun substringSimilarity(textTokens: IntArray, nameTokens: IntArray): Double {
+        val n = nameTokens.size
+        if (n == 0) return 0.0
+        val t = textTokens.size
+        if (t == 0) return 0.0
+        if (t <= n + 2) {
+            // 짧은 텍스트 — 전체 비교
+            val d = weightedDistance(textTokens, nameTokens)
+            return 1.0 - d / maxOf(n, t)
+        }
+        val delta = 2
+        var best = 0.0
+        for (w in maxOf(1, n - delta)..(n + delta)) {
+            if (w > t) break
+            for (s in 0..(t - w)) {
+                val sub = textTokens.copyOfRange(s, s + w)
+                val d = weightedDistance(sub, nameTokens)
+                val sim = 1.0 - d / maxOf(n, w)
+                if (sim > best) best = sim
+                if (best >= 1.0) return 1.0
+            }
+        }
+        return best
+    }
+
+    /** 후보 미리 토큰화 결과 — 핫 패스에서 재사용. */
+    class Candidates(names: Collection<String>) {
+        val list: List<String> = names.distinct()
+        val tokens: List<IntArray> = list.map { tokenize(it) }
+    }
+
+    /**
+     * text와 가장 유사한 후보 + 점수(0~1)를 반환. threshold 미달이면 null.
+     * candidates는 [Candidates]로 미리 토큰화하면 호출당 비용 절감.
+     */
+    fun bestMatch(
+        text: String,
+        candidates: Candidates,
+        threshold: Double = 0.7,
+    ): Pair<String, Double>? {
+        if (text.isEmpty() || candidates.list.isEmpty()) return null
+        val tt = tokenize(text)
+        var bestName: String? = null
+        var bestScore = 0.0
+        for (i in candidates.list.indices) {
+            val sim = substringSimilarity(tt, candidates.tokens[i])
+            if (sim > bestScore) {
+                bestScore = sim
+                bestName = candidates.list[i]
+                if (sim >= 1.0) break
+            }
+        }
+        if (bestName == null || bestScore < threshold) return null
+        return bestName to bestScore
+    }
 }

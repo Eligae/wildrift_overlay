@@ -43,6 +43,22 @@ export interface TierTable {
 
 export type LaneKey = "TOP" | "JUG" | "MID" | "ADC" | "SUP";
 
+// 텐센트 mode → 사이트 탭 (Nora SUP 데이터로 매핑 검증).
+// mode 3은 정체 불명 → 미노출.
+export type Cohort = "DIAMOND" | "MASTER" | "GRANDMASTER" | "CHALLENGER";
+export const COHORT_TO_MODE: Record<Cohort, string> = {
+  DIAMOND: "0",
+  MASTER: "1",
+  GRANDMASTER: "2",
+  CHALLENGER: "4",
+};
+export const COHORT_ORDER: Cohort[] = ["DIAMOND", "MASTER", "GRANDMASTER", "CHALLENGER"];
+
+export interface TierTableByCohort {
+  fetchedAt: number;
+  cohorts: Record<Cohort, Record<LaneKey, NormalizedHero[]>>;
+}
+
 // 실측 검증된 매핑 (텐센트 hero_rank_list_v2).
 const POSITION_TO_LANE: Record<string, LaneKey> = {
   "1": "MID",
@@ -81,39 +97,44 @@ export async function fetchHeroList(): Promise<Record<string, TencentHero>> {
 export async function buildTierTable(
   krMap: Record<string, string>,
   heroList?: Record<string, TencentHero>,
-  mode: string = "0",
-): Promise<TierTable> {
+): Promise<TierTableByCohort> {
   const [tierResp, heroes] = await Promise.all([
     fetchTierData(),
     heroList ? Promise.resolve(heroList) : fetchHeroList(),
   ]);
-  const modeData = tierResp.data[mode];
-  if (!modeData) throw new Error(`unknown mode: ${mode}`);
 
-  const lanes = {} as Record<LaneKey, NormalizedHero[]>;
-  for (const [pos, laneKey] of Object.entries(POSITION_TO_LANE)) {
-    const rows = modeData[pos] ?? [];
-    const normalized: NormalizedHero[] = rows.map((row) => {
-      const hero = heroes[row.hero_id];
-      return {
-        heroId: row.hero_id,
-        cnName: hero?.name ?? "?",
-        alias: hero?.alias ?? "",
-        krName: krMap[row.hero_id],
-        avatar: hero?.avatar ?? "",
-        winRate: parseFloat(row.win_rate),
-        pickRate: parseFloat(row.appear_rate),
-        banRate: parseFloat(row.forbid_rate),
-        strength: parseFloat(row.strength),
-        tierLevel: parseInt(row.strength_level, 10),
-      };
-    });
-    normalized.sort((a, b) => b.winRate - a.winRate);
-    lanes[laneKey] = normalized;
+  const cohorts = {} as Record<Cohort, Record<LaneKey, NormalizedHero[]>>;
+  for (const cohort of COHORT_ORDER) {
+    const mode = COHORT_TO_MODE[cohort];
+    const modeData = tierResp.data[mode];
+    if (!modeData) throw new Error(`tencent response missing mode ${mode} (${cohort})`);
+    const lanes = {} as Record<LaneKey, NormalizedHero[]>;
+    for (const [pos, laneKey] of Object.entries(POSITION_TO_LANE)) {
+      const rows = modeData[pos] ?? [];
+      const normalized: NormalizedHero[] = rows.map((row) => {
+        const hero = heroes[row.hero_id];
+        return {
+          heroId: row.hero_id,
+          cnName: hero?.name ?? "?",
+          alias: hero?.alias ?? "",
+          krName: krMap[row.hero_id],
+          avatar: hero?.avatar ?? "",
+          winRate: parseFloat(row.win_rate),
+          pickRate: parseFloat(row.appear_rate),
+          banRate: parseFloat(row.forbid_rate),
+          strength: parseFloat(row.strength),
+          tierLevel: parseInt(row.strength_level, 10),
+        };
+      });
+      // strength = 텐센트 라인 내 종합 순위 (1=1위). lolm.qq.com 페이지 정렬과 동일.
+      normalized.sort((a, b) => a.strength - b.strength || b.winRate - a.winRate);
+      lanes[laneKey] = normalized;
+    }
+    cohorts[cohort] = lanes;
   }
 
   return {
     fetchedAt: Date.now(),
-    lanes,
+    cohorts,
   };
 }

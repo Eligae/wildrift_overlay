@@ -13,7 +13,7 @@
     <string name="notification_text">와일드리프트 스펠체크가 실행 중입니다.</string>
     <string name="scale_label">오버레이 크기</string>
     <string name="alpha_label">오버레이 투명도</string>
-    <string name="pass_through_label">터치를 게임에 통과 (스펠 클릭 불가)</string>
+    <string name="pass_through_label">터치를 게임에 통과 (오버레이 스펠 클릭 불가)</string>
     <string name="accessibility_service_label">와일드리프트 채팅 감지</string>
     <string name="accessibility_desc">와일드리프트 채팅에서 스펠 사용 메시지를 감지합니다.</string>
     <string name="capture_test">캡처 시작 (연속 5s)</string>
@@ -24,6 +24,8 @@
     <string name="tier_error">오류: %1$s</string>
     <string name="open_tier">티어 보기</string>
     <string name="win_label">WIN</string>
+    <string name="pick_label">PICK</string>
+    <string name="ban_label">BAN</string>
     <string name="mode_recommend">추천</string>
     <string name="mode_table">전체</string>
     <string name="comp_synergy">시너지</string>
@@ -41,4 +43,12 @@
     <string name="calib_reset">초기화</string>
     <string name="calib_save">저장</string>
     <string name="calib_saved">저장됨. 다음 캡처부터 적용.</string>
+    <string name="cohort_diamond">D</string>
+    <string name="cohort_master">M</string>
+    <string name="cohort_grandmaster">GM</string>
+    <string name="cohort_challenger">C</string>
+    <string name="sort_win_rate">승률</string>
+    <string name="sort_pick_rate">픽률</string>
+    <string name="sort_ban_rate">밴률</string>
+    <string name="news_banner_prefix">🔔 새 업데이트</string>
 </resources>

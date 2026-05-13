@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.util.Log
+import com.eligae.wildrift.overlay.api.ChampionSkinsCache
 import com.eligae.wildrift.overlay.api.ChampionsCache
 import com.eligae.wildrift.overlay.history.MatchHistoryStore
 import com.eligae.wildrift.overlay.history.MatchRecord
@@ -95,8 +96,9 @@ internal class OcrProcessor(
         val blockTexts = result.textBlocks.map { it.text }
         val dynamicForChat = ChampionsCache(context.applicationContext).load()
             ?.champions?.map { it.krName }?.toSet() ?: emptySet()
+        val skinAliasMap = ChampionSkinsCache(context.applicationContext).flatten()
         var chatTouched = false
-        for (m in ChatParser.parse(blockTexts, dynamicForChat)) {
+        for (m in ChatParser.parse(blockTexts, dynamicForChat, skinAliasMap)) {
             Log.d(TAG, "CHAT MATCH: ${m.champion} → ${m.spell.name}")
             if (triggerSlotSpell(m, prefs)) chatTouched = true
         }
@@ -156,7 +158,7 @@ internal class OcrProcessor(
             ?.map { it.krName }
             ?.toSet()
             ?: emptySet()
-        val teams = LoadingScreenParser.parseTeams(locs, rotatedFrameHeight, anchor, dynamicNames)
+        val teams = LoadingScreenParser.parseTeams(locs, rotatedFrameHeight, anchor, dynamicNames, skinAliasMap)
 
         maybeSaveAllyAnchor(teams.picks, prefs)
         broadcastEnemiesIfPass(scaled, teams, prefs, anchor != null)

@@ -23,12 +23,17 @@ object ChatParser {
         "강타" to Spell.SMITE,
     )
 
-    fun parse(blocks: List<String>, extraKnownNames: Set<String> = emptySet()): List<Match> {
+    fun parse(
+        blocks: List<String>,
+        extraKnownNames: Set<String> = emptySet(),
+        skinAliasMap: Map<String, String> = emptyMap(),
+    ): List<Match> {
         val results = mutableListOf<Match>()
-        // 길이 내림차순 — 짧은 이름이 긴 이름의 부분 fuzzy로 잘못 매칭되는 사고 방지.
-        val allNames: List<String> = (ChampionRegistry.KNOWN_NAMES + extraKnownNames)
+        // 후보 = 정적 KNOWN_NAMES + 동적 챔피언명 + 스킨명. 길이 내림차순으로 false-positive 방지.
+        val allNames: List<String> = (ChampionRegistry.KNOWN_NAMES + extraKnownNames + skinAliasMap.keys)
             .distinct()
             .sortedByDescending { it.length }
+        val candidates = KoreanFuzzy.Candidates(allNames)
         for (raw in blocks) {
             val text = raw.replace("\n", " ")
             val spellEntry = spellAliases.entries.firstOrNull { text.contains(it.key) } ?: continue
@@ -42,8 +47,11 @@ object ChatParser {
                     if (idx >= 0) name to idx else null
                 }
                 .maxByOrNull { it.second }
-                ?.first ?: continue
-            results.add(Match(ChampionRegistry.canonical(champ), spellEntry.value))
+                ?.first
+                ?: KoreanFuzzy.bestMatch(pre, candidates, threshold = 0.7)?.first
+                ?: continue
+            val canon = skinAliasMap[champ] ?: ChampionRegistry.canonical(champ)
+            results.add(Match(canon, spellEntry.value))
         }
         return results
     }

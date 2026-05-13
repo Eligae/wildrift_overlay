@@ -10,9 +10,13 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "scrape-skins": "tsx scripts/scrape-skins.ts",
+    "scrape-skins-namu": "tsx scripts/scrape-skins-namu.ts"
   },
   "dependencies": {
+    "@types/compression": "^1.8.1",
+    "compression": "^1.8.1",
     "express": "^4.21.0",
     "node-cron": "^3.0.3"
   },

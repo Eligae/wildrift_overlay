@@ -22,6 +22,8 @@ import com.eligae.wildrift.overlay.R
 import com.eligae.wildrift.overlay.capture.ScreenCaptureService
 import com.eligae.wildrift.overlay.floating.OverlayService
 import com.eligae.wildrift.overlay.prefs.OverlayPrefs
+import com.eligae.wildrift.overlay.api.ChampionSkinsSync
+import com.eligae.wildrift.overlay.update.NewsCheck
 import com.eligae.wildrift.overlay.update.VersionCheck
 import kotlinx.coroutines.launch
 
@@ -45,6 +47,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var updateBannerText: TextView
     private lateinit var updateBannerOpen: TextView
     private lateinit var updateBannerClose: TextView
+    private lateinit var newsBanner: LinearLayout
+    private lateinit var newsBannerText: TextView
+    private lateinit var newsBannerOpen: TextView
+    private lateinit var newsBannerClose: TextView
 
     private val notifPermLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -89,6 +95,10 @@ class MainActivity : AppCompatActivity() {
         updateBannerText = findViewById(R.id.update_banner_text)
         updateBannerOpen = findViewById(R.id.update_banner_open)
         updateBannerClose = findViewById(R.id.update_banner_close)
+        newsBanner = findViewById(R.id.news_banner)
+        newsBannerText = findViewById(R.id.news_banner_text)
+        newsBannerOpen = findViewById(R.id.news_banner_open)
+        newsBannerClose = findViewById(R.id.news_banner_close)
 
         btnGrant.setOnClickListener { requestOverlayPermission() }
         btnStart.setOnClickListener { toggleOverlay() }
@@ -134,6 +144,25 @@ class MainActivity : AppCompatActivity() {
 
         requestNotificationPermissionIfNeeded()
         checkUpdate()
+        checkNews()
+        lifecycleScope.launch { ChampionSkinsSync.syncIfChanged(this@MainActivity) }
+    }
+
+    private fun checkNews() {
+        lifecycleScope.launch {
+            val news = NewsCheck.checkLatest(this@MainActivity) ?: return@launch
+            newsBannerText.text = "${getString(R.string.news_banner_prefix)}: ${news.title}"
+            newsBannerOpen.setOnClickListener {
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(news.url)))
+                NewsCheck.markSeen(this@MainActivity, news.url)
+                newsBanner.visibility = View.GONE
+            }
+            newsBannerClose.setOnClickListener {
+                NewsCheck.markSeen(this@MainActivity, news.url)
+                newsBanner.visibility = View.GONE
+            }
+            newsBanner.visibility = View.VISIBLE
+        }
     }
 
     private fun checkUpdate() {
