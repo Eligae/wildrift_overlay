@@ -2,6 +2,7 @@
 <resources>
     <string name="app_name">WR Overlay</string>
     <string name="app_title">Wild Rift Overlay</string>
+    <string name="wip_toast">개발중입니다</string>
     <string name="grant_permission">오버레이 권한 부여</string>
     <string name="start_overlay">오버레이 시작</string>
     <string name="stop_overlay">오버레이 중지</string>

@@ -13,6 +13,10 @@ val localProps = Properties().apply {
 
 val apiBaseUrl: String = localProps.getProperty("WR_API_BASE_URL") ?: "http://192.168.0.35:3000/"
 val apiToken: String = localProps.getProperty("WR_API_TOKEN") ?: ""
+val releaseKeystorePath: String = localProps.getProperty("RELEASE_KEYSTORE_PATH") ?: ""
+val releaseKeystorePassword: String = localProps.getProperty("RELEASE_KEYSTORE_PASSWORD") ?: ""
+val releaseKeyAlias: String = localProps.getProperty("RELEASE_KEY_ALIAS") ?: ""
+val releaseKeyPassword: String = localProps.getProperty("RELEASE_KEY_PASSWORD") ?: ""
 
 android {
     namespace = "com.eligae.wildrift.overlay"
@@ -22,8 +26,8 @@ android {
         applicationId = "com.eligae.wildrift.overlay"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.0.1"
+        versionCode = 2
+        versionName = "0.1.0"
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
         buildConfigField("String", "API_TOKEN", "\"$apiToken\"")
     }
@@ -32,8 +36,22 @@ android {
         buildConfig = true
     }
 
+    signingConfigs {
+        if (releaseKeystorePath.isNotEmpty()) {
+            create("release") {
+                storeFile = file(releaseKeystorePath)
+                storePassword = releaseKeystorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
+            if (releaseKeystorePath.isNotEmpty()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

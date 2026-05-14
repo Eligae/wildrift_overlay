@@ -243,10 +243,10 @@
       <header>
         <img src="logo.svg" alt="WR Overlay" class="logo" />
         <div class="badge">Android · 와일드리프트</div>
-        <h1>스펠 쿨다운<br /><span class="accent">한눈에</span></h1>
+        <h1>한국어 티어표<br /><span class="accent">한 앱에서</span></h1>
         <p class="tagline">
-          와일드리프트 인게임 중 적 챔피언의 스펠과 궁극기 쿨다운을 화면 위
-          오버레이로 추적. 한국어 티어표까지 한 앱에서.
+          와일드리프트 라인별 챔피언 티어와 통계를 한국어로. 인게임 오버레이/
+          자동 감지 기능은 다음 버전에서 정식 공개 예정.
         </p>
 
         <div class="download">
@@ -260,28 +260,27 @@
         <h2>주요 기능</h2>
         <ul class="features">
           <li>
-            <strong>인게임 오버레이</strong> — 적 5명 슬롯, 스펠 2개 (점멸/점화
-            등). 탭 한 번으로 쿨다운 시작.
-          </li>
-          <li>
-            <strong>3단계 토글</strong> — 손잡이 단일 탭으로 전체 / 라인 라벨
-            숨김 / 완전 접힘 순환.
-          </li>
-          <li>
-            <strong>크기 슬라이더</strong> — 0.5x ~ 1.5x. 폰/사용자 시야에 맞춰
-            조정.
-          </li>
-          <li>
             <strong>한국어 티어표</strong> — 라인별 추천 카드 + 전체 표.
-            lolm.qq.com 데이터 한국어화.
+            lolm.qq.com 데이터 한국어화. WR 모드 cohort 탭 지원.
           </li>
           <li>
-            <strong>전적, 카운터 관련 픽</strong> — 전적 저장 후, 유저의 챔피언
-            픽에 대한 평가 및 추천
+            <strong>업데이트/뉴스 배너</strong> — 새 릴리스 및 패치 노트 알림.
           </li>
           <li>
-            <strong>자동 채팅 감지 (개발 중)</strong> — 적이 스펠 쓰면 채팅
+            <strong>인게임 오버레이 (개발중)</strong> — 적 5명 스펠 쿨다운 수동
+            트래커. 다음 릴리스에서 활성화.
+          </li>
+          <li>
+            <strong>자동 채팅 OCR 감지 (개발중)</strong> — 적이 스펠 쓰면 채팅
             메시지를 OCR로 잡아 자동 카운트다운.
+          </li>
+          <li>
+            <strong>전적/카운터 추천 (개발중)</strong> — 전적 저장 후 유저
+            챔피언 픽 평가 및 카운터 제안.
+          </li>
+          <li>
+            <strong>OCR 영역 캘리브레이션 (개발중)</strong> — 다양한 해상도/
+            크롭 비율에 맞춰 OCR 좌표 조정.
           </li>
         </ul>
       </section>
@@ -301,37 +300,22 @@
         <div class="step">
           <div class="step-num">2</div>
           <div>
-            <h4>권한 부여</h4>
+            <h4>티어 보기</h4>
             <p>
-              앱에서 "오버레이 권한 부여" → 시스템 설정에서 다른 앱 위에 표시
-              ON.
+              앱 실행 → "티어 보기" 버튼. 라인 필터 + WR 모드 cohort 탭으로
+              메타 한눈에.
             </p>
           </div>
         </div>
         <div class="step">
           <div class="step-num">3</div>
           <div>
-            <h4>오버레이 시작</h4>
+            <h4>오버레이 / OCR (개발중)</h4>
             <p>
-              "오버레이 시작" 버튼 → 좌상단에 슬롯 5개 표시. 손잡이 드래그로
-              위치 조정.
+              "오버레이 시작"·"캡처"·"전적 보기"·"OCR 영역 설정"·"조합 보기"는
+              현재 "개발중입니다" 안내 후 비활성. 다음 릴리스에서 단계적으로
+              열립니다.
             </p>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">4</div>
-          <div>
-            <h4>인게임</h4>
-            <p>
-              와일드리프트 실행 → 적 스펠 본 순간 해당 슬롯 탭. 카운트다운 시작.
-            </p>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-num">5</div>
-          <div>
-            <h4>사운드 트리거</h4>
-            <p>채팅(스펠 문구) 사운드 인식 후 ROI OCR 분석 자동화(개발중).</p>
           </div>
         </div>
       </section>
@@ -353,10 +337,10 @@
         <div class="faq-a">귀찮아서요</div>
         <div class="faq-q">Ios는 안되나요?</div>
         <div class="faq-a">Ios 오버레이는 정책상 못만들어요</div>
-        <div class="faq-q">자동 채팅 감지는 어떻게 동작하나요?</div>
+        <div class="faq-q">오버레이/OCR은 언제 공개되나요?</div>
         <div class="faq-a">
-          기본 OFF. 사용자가 토글로 켜면 채팅 영역만 OCR로 분석합니다. 다른
-          영역·메모리·네트워크엔 접근하지 않습니다.
+          현재 OCR 인식 정확도와 좌표 안정성을 다듬는 중입니다. 안정화되는 대로
+          단계적으로 활성화할 예정입니다.
         </div>
       </section>
 
